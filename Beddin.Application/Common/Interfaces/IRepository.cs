@@ -1,6 +1,7 @@
-﻿using Beddin.Domain.Common;
+﻿using Beddin.Application.Common.DTOs;
 using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Aggregates.Users;
+using Beddin.Domain.Common;
 
 namespace Beddin.Application.Common.Interfaces
 {
@@ -13,7 +14,7 @@ namespace Beddin.Application.Common.Interfaces
         Task DeleteAsync(TAggregate aggregate, CancellationToken ct = default);
     }
 
-    public interface ISessionRepository
+    public interface IUserSessionRepository
     {
         Task<UserSession?> GetByIdAsync(Guid sessionId, CancellationToken ct = default);
         Task<UserSession?> GetByTokenHashAsync(string tokenHash, CancellationToken ct = default);
@@ -26,7 +27,13 @@ namespace Beddin.Application.Common.Interfaces
 
     public interface IPropertyRepository : IRepository<Property, PropertyId>
     {
-        Task<IEnumerable<Property>> GetByOwnerAsync(Guid ownerId, CancellationToken ct = default);
+        //Task<IEnumerable<Property>> GetByOwner(
+        //    Guid ownerId,
+        //    int pageNumber,
+        //    int pageSize,
+        //    PropertyStatus? status = null,
+        //    CancellationToken ct = default);
+        Task<IEnumerable<Property>> GetPropertiesByOwner(UserId ownerId, CancellationToken ct = default);
 
     }
 }

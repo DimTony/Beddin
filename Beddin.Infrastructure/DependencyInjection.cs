@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Beddin.Application.Common.Interfaces;
+using Beddin.Infrastructure.Persistence;
+using Beddin.Infrastructure.Persistence.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -13,11 +17,47 @@ namespace Beddin.Infrastructure
             IConfiguration configuration)
         {
             services
-                //.AddDatabase(configuration)
-                //.AddRepositories()
+                .AddDatabase(configuration)
+                .AddRepositories()
                 //.AddServices()
                 .AddObservability(configuration);
 
+            return services;
+        }
+
+        public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
+        {
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(
+                    connectionString,
+                    npgsqlOptions =>
+                    {
+                        npgsqlOptions.UseNetTopologySuite();
+                        npgsqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(10),
+                            errorCodesToAdd: null
+                        );
+                    }
+                )
+            );
+
+            // AppDbContext now implements IUnitOfWork
+            services.AddScoped<IUnitOfWork>(provider =>
+                provider.GetRequiredService<AppDbContext>());
+
+            services.AddScoped<IDomainEventCollector, EfDomainEventCollector>();
+
+            return services;
+        }
+        public static IServiceCollection AddRepositories(this IServiceCollection services)
+        {
+            services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+            // Add concrete repositories (e.g. IPropertyRepository -> PropertyRepository) as you implement them:
+            services.AddScoped<IUserSessionRepository, UserSessionRepository>();
+            services.AddScoped<IPropertyRepository, PropertyRepository>();
             return services;
         }
         public static IServiceCollection AddObservability(

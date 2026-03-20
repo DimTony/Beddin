@@ -25,6 +25,11 @@ namespace Beddin.Infrastructure.Persistence.Configurations
             builder.Property(pa => pa.AmenityId)
                 .HasConversion(id => id.Value, value => new AmenityId(value));
 
+            builder.HasOne(b => b.Property)
+                .WithMany() // or .WithMany(p => p.Bookings) if you add collection
+                .HasForeignKey(b => b.PropertyId)
+                .HasPrincipalKey(p => p.Id);
+
 
             builder.Ignore(p => p.DomainEvents);
         }

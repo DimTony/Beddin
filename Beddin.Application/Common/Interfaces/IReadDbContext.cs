@@ -1,4 +1,5 @@
 ﻿using Beddin.Domain.Aggregates.Properties;
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace Beddin.Application.Common.Interfaces
     public interface IReadDbContext
     {
         //IQueryable<User> Users { get; }
+        IQueryable<UserSession> UserSessions { get; }
         IQueryable<Property> Properties { get; }
         IQueryable<Favorite> Favorites { get; }
         IQueryable<Amenity> Amenities { get; }

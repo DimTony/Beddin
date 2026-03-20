@@ -1,20 +1,23 @@
 ﻿using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Properties;
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Beddin.Infrastructure.Persistence
 {
-    public class AppDbContext : DbContext, IReadDbContext
+    public class AppDbContext : DbContext, IReadDbContext, IUnitOfWork
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public DbSet<UserSession> UserSessions => Set<UserSession>();
         public DbSet<Property> Properties => Set<Property>();
         public DbSet<Favorite> Favorites => Set<Favorite>();
         public DbSet<Amenity> Amenities => Set<Amenity>();
         public DbSet<PropertyAmenity> PropertyAmenities => Set<PropertyAmenity>();
         public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
 
+        IQueryable<UserSession> IReadDbContext.UserSessions => UserSessions;
         IQueryable<Property> IReadDbContext.Properties => Properties;
         IQueryable<Favorite> IReadDbContext.Favorites => Favorites;
         IQueryable<Amenity> IReadDbContext.Amenities => Amenities;
@@ -25,6 +28,7 @@ namespace Beddin.Infrastructure.Persistence
         {
             modelBuilder.Ignore<DomainEvent>();
             modelBuilder.Ignore<UserId>();
+            modelBuilder.Ignore<UserSessionId>();
             modelBuilder.Ignore<PropertyId>();
             modelBuilder.Ignore<FavoriteId>();
             modelBuilder.Ignore<AmenityId>();
@@ -42,6 +46,10 @@ namespace Beddin.Infrastructure.Persistence
             var userIdConverter = new ValueConverter<UserId, Guid>(
                 id => id.Value,
                 value => new UserId(value));
+
+            var userSessionIdConverter = new ValueConverter<UserSessionId, Guid>(
+                id => id.Value,
+                value => new UserSessionId(value));
 
             var propertyIdConverter = new ValueConverter<PropertyId, Guid>(
                 id => id.Value,
@@ -70,6 +78,8 @@ namespace Beddin.Infrastructure.Persistence
             
                     if (property.ClrType == typeof(UserId))
                         property.SetValueConverter(userIdConverter);
+                    else if (property.ClrType == typeof(UserSessionId))
+                        property.SetValueConverter(userSessionIdConverter);
                     else if (property.ClrType == typeof(PropertyId))
                         property.SetValueConverter(propertyIdConverter);
                     else if (property.ClrType == typeof(FavoriteId))

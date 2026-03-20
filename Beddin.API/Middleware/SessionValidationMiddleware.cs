@@ -16,7 +16,7 @@ namespace Beddin.API.Middleware
 
         public SessionValidationMiddleware(RequestDelegate next) => _next = next;
 
-        public async Task InvokeAsync(HttpContext context, ISessionRepository sessionRepo)
+        public async Task InvokeAsync(HttpContext context, IUserSessionRepository sessionRepo)
         {
             // Skip unauthenticated requests and excluded paths
             var path = context.Request.Path.Value ?? string.Empty;

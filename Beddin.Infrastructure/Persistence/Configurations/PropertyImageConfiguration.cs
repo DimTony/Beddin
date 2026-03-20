@@ -28,6 +28,11 @@ namespace Beddin.Infrastructure.Persistence.Configurations
 
             builder.Property(i => i.IsPrimary);
 
+            builder.HasOne(b => b.Property)
+                .WithMany()
+                .HasForeignKey(b => b.PropertyId)
+                .HasPrincipalKey(p => p.Id);
+
             builder.HasIndex("PropertyId").HasDatabaseName("ix_property_images_property_id");
 
             builder.Ignore(p => p.DomainEvents);

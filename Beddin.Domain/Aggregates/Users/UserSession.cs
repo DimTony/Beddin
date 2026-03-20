@@ -10,7 +10,7 @@ namespace Beddin.Domain.Aggregates.Users
     public class UserSession : AggregateRoot<UserSessionId>
     {
         public UserId UserId { get; private set; } = default!;
-        public string Token { get; private set; } = default!;
+        //public string Token { get; private set; } = default!;
         public string TokenHash { get; private set; } = default!;
         public string? IpAddress { get; private set; }
         public string? UserAgent { get; private set; }
@@ -36,7 +36,7 @@ namespace Beddin.Domain.Aggregates.Users
             {
                 Id = UserSessionId.New(),
                 UserId = userId,
-                Token = token,
+                //Token = token,
                 TokenHash = tokenHash,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
@@ -57,7 +57,7 @@ namespace Beddin.Domain.Aggregates.Users
             {
                 Id = sessionId,
                 UserId = userId,
-                Token = token,
+                //Token = token,
                 TokenHash = ComputeHash(token),
                 IpAddress = ipAddress,
                 UserAgent = userAgent,

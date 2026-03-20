@@ -53,41 +53,41 @@ namespace Beddin.Infrastructure.Persistence.Configurations
                 .HasColumnType("geography(Point, 4326)")   // PostGIS type
                 .IsRequired(false);
 
-            builder.Property(p => p.Bedrooms).IsRequired(false);
-            builder.Property(p => p.Bathrooms).HasColumnType("decimal(4,1)").IsRequired(false);
-            builder.Property(p => p.SquareFeet).HasColumnType("decimal(12,2)").IsRequired(false);
-            builder.Property(p => p.LotSize).HasColumnType("decimal(12,2)").IsRequired(false);
+            builder.Property(p => p.Bedrooms).IsRequired();
+            builder.Property(p => p.Bathrooms).HasColumnType("decimal(4,1)").IsRequired();
+            builder.Property(p => p.SquareFeet).HasColumnType("decimal(12,2)").IsRequired();
+            builder.Property(p => p.LotSize).HasColumnType("decimal(12,2)").IsRequired();
             builder.Property(p => p.YearBuilt).IsRequired(false);
 
-            builder.Property(p => p.Price).HasColumnType("decimal(18,2)").IsRequired(false);
+            builder.Property(p => p.Price).HasColumnType("decimal(18,2)").IsRequired();
 
             builder.Property(p => p.IsPublished);
             builder.Property(p => p.IsFeatured);
             builder.Property(p => p.ViewCount);
             builder.Property(p => p.FavoriteCount);
 
-            builder.Property(p => p.CreatedAt);
+            builder.Property(p => p.CreatedAt).IsRequired();
             builder.Property(p => p.UpdatedAt);
-            builder.Property(p => p.PublishedAt).IsRequired(false);
+            builder.Property(p => p.PublishedAt);
 
             builder.HasMany(p => p.Images)
                 .WithOne()
-                .HasForeignKey("PropertyId")
+                .HasForeignKey("PropertyImageId")
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(p => p.Amenities)
                 .WithOne()
-                .HasForeignKey("PropertyId")
+                .HasForeignKey("AmentityId")
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(p => p.Favorites)
                 .WithOne()
-                .HasForeignKey("PropertyId")
+                .HasForeignKey("FavoriteId")
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(p => p.Bookings)
                 .WithOne()
-                .HasForeignKey("PropertyId")
+                .HasForeignKey("BookingId")
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(p => p.Owner).HasDatabaseName("ix_properties_owner_id");
