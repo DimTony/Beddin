@@ -43,7 +43,7 @@ namespace Beddin.IntegrationTests.Infrastructure
     //}
     public abstract class IntegrationTestBase : IAsyncLifetime
     {
-        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16")
+        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgis/postgis:16-3.4")
             //.WithImage("postgres:16")
             .WithDatabase("beddin_test")
             .WithUsername("test_user")
