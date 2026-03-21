@@ -1,0 +1,69 @@
+name: Feature request
+description: Propose a new feature or enhancement
+labels: ["type: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: "Fill in as much detail as you can. The more context, the faster this gets picked up."
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User story
+      description: "Who wants this and why?"
+      placeholder: "As a [buyer / agent / admin], I want to [action] so that [outcome]."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: "Specific, testable conditions that define done."
+      placeholder: |
+        - [ ] Condition one
+        - [ ] Condition two
+        - [ ] Condition three
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical notes
+      description: "API routes, libraries, DB changes, or architectural decisions. Optional but helpful."
+    validations:
+      required: false
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: "What is explicitly NOT included in this issue? Link related issues if applicable."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Frontend
+        - Backend
+        - Infra
+        - Docs
+        - Full-stack
+    validations:
+      required: true
+
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Milestone
+      options:
+        - "v0.1 · Foundation"
+        - "v0.2 · Core search"
+        - "v0.3 · Engagement"
+        - "v1.0 · Launch-ready"
+    validations:
+      required: true

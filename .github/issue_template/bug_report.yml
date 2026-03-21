@@ -1,0 +1,61 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly
+labels: ["type: bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: "A clear description of what is wrong."
+      placeholder: "When I do X, Y happens instead of Z."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to /search
+        2. Apply filter: bedrooms = 3
+        3. Observe: results show 0 listings even though listings exist
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      placeholder: "Listings with 3 bedrooms should appear in results."
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        - OS: macOS 14 / Windows 11 / iOS 17
+        - Browser: Chrome 122 / Safari 17 / Firefox 123
+        - App version / commit: main @ abc1234
+    validations:
+      required: true
+
+  - type: textarea
+    id: possible-cause
+    attributes:
+      label: Possible cause
+      description: "If you have a hypothesis, share it. Optional."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "High — blocks core functionality"
+        - "Medium — degrades experience"
+        - "Low — cosmetic / edge case"
+    validations:
+      required: true
