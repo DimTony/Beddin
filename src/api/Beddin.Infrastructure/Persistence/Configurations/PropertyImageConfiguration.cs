@@ -19,7 +19,7 @@ namespace Beddin.Infrastructure.Persistence.Configurations
             builder.Property(i => i.Id)
                 .HasConversion(id => id.Value, value => new PropertyImageId(value));
 
-            builder.Property<PropertyId>("PropertyId")
+            builder.Property(i => i.PropertyId)
                 .HasConversion(id => id.Value, value => new PropertyId(value));
 
             builder.Property(i => i.ImageUrl)
@@ -29,11 +29,18 @@ namespace Beddin.Infrastructure.Persistence.Configurations
             builder.Property(i => i.IsPrimary);
 
             builder.HasOne(b => b.Property)
-                .WithMany()
+                .WithMany(l => l.Images)
                 .HasForeignKey(b => b.PropertyId)
-                .HasPrincipalKey(p => p.Id);
+                .HasPrincipalKey(p => p.Id)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasIndex("PropertyId").HasDatabaseName("ix_property_images_property_id");
+            builder.HasIndex(i => i.PropertyId)
+               .HasDatabaseName("ix_property_images_listing_id");
+
+            builder.HasIndex(i => new { i.PropertyId, i.IsPrimary })
+               .HasFilter("\"IsPrimary\" = true")
+               .IsUnique()
+               .HasDatabaseName("uix_property_images_one_cover_per_listing");
 
             builder.Ignore(p => p.DomainEvents);
 

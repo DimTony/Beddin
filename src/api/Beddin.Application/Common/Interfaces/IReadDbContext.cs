@@ -10,12 +10,14 @@ namespace Beddin.Application.Common.Interfaces
 {
     public interface IReadDbContext
     {
-        //IQueryable<User> Users { get; }
+        IQueryable<User> Users { get; }
+        IQueryable<SavedSearch> SavedSearches { get; }
         IQueryable<UserSession> UserSessions { get; }
         IQueryable<Property> Properties { get; }
         IQueryable<Favorite> Favorites { get; }
         IQueryable<Amenity> Amenities { get; }
         IQueryable<PropertyAmenity> PropertyAmenities { get; }
         IQueryable<PropertyImage> PropertyImages { get; }
+        IQueryable<Inquiry> Inquiries { get; }
     }
 }

@@ -14,6 +14,12 @@ namespace Beddin.Application.Common.Interfaces
         Task DeleteAsync(TAggregate aggregate, CancellationToken ct = default);
     }
 
+    public interface IUserRepository : IRepository<User, UserId>
+    {
+        Task<User?> GetByEmail(string email, CancellationToken ct = default);
+
+    }
+
     public interface IUserSessionRepository
     {
         Task<UserSession?> GetByIdAsync(Guid sessionId, CancellationToken ct = default);

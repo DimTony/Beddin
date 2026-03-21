@@ -2,10 +2,10 @@
 
 namespace Beddin.Domain.Aggregates.Properties
 {
-    public class PropertyImage : AggregateRoot<PropertyImageId>
+    public sealed class PropertyImage : AggregateRoot<PropertyImageId>
     {
         public string PublicId { get; private set; } = default!;
-        public PropertyId? PropertyId { get; private set; }
+        public PropertyId PropertyId { get; private set; } = default!;
         public string ImageUrl { get; private set; } = default!;
         public string? ThumbnailUrl { get; private set; }
 

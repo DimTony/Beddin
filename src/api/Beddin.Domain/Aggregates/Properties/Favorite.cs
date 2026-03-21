@@ -3,7 +3,7 @@ using Beddin.Domain.Events;
 
 namespace Beddin.Domain.Aggregates.Properties
 {
-    public class Favorite : AggregateRoot<FavoriteId>
+    public sealed class Favorite : AggregateRoot<FavoriteId>
     {
         public UserId UserId { get; private set; } = null!;
         public PropertyId PropertyId { get; private set; } = null!;

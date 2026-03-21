@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Beddin.Domain.Aggregates.Properties
 {
-    public class PropertyAmenity : Entity<PropertyAmenityId>
+    public sealed class PropertyAmenity : Entity<PropertyAmenityId>
     {
         public PropertyId PropertyId { get; private set; } = null!;
         public AmenityId AmenityId { get; private set; } = null!;

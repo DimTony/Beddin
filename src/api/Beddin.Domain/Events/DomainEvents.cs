@@ -7,6 +7,33 @@ using System.Threading.Tasks;
 
 namespace Beddin.Domain.Events
 {
+    public record UserCreatedEvent(
+      UserId UserId,
+      string FirstName,
+      string LastName,
+      string Email,
+      string Role) : DomainEvent;
+
+    public record EmailUpdatedEvent(
+     UserId UserId,
+      string FirstName,
+      string LastName,
+      string Email) : DomainEvent;
+
+    public record RoleUpdatedEvent(
+     UserId UserId,
+      string FirstName,
+      string LastName,
+      string Email,
+     string NewRole) : DomainEvent;
+
+    public record UserDeactivatedEvent(
+     UserId UserId,
+      string FirstName,
+      string LastName,
+      string Email) : DomainEvent;
+
+    
     public record PropertyCreatedEvent(
       PropertyId PropertyId,
       string Title,
@@ -40,7 +67,8 @@ namespace Beddin.Domain.Events
       PropertyId PropertyId,
       DateTime CreatedAt) : DomainEvent;
 
+    public record SavedSearchCreatedEvent(
+      SavedSearchId Id) : DomainEvent;
     
-
 
 }
