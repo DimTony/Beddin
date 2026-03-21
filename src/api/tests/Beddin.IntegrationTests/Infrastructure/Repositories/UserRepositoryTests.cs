@@ -10,10 +10,17 @@ namespace Beddin.IntegrationTests.Infrastructure.Repositories
 {
     public class UserRepositoryTests : IntegrationTestBase
     {
-        private readonly IRepository<User, UserId> _repository;
+        //private readonly IRepository<User, UserId> _repository;
 
-        public UserRepositoryTests()
+        //public UserRepositoryTests()
+        //{
+
+        //    _repository = new Repository<User, UserId>(DbContext);
+        //}
+        private IRepository<User, UserId> _repository = null!;
+        public override async Task InitializeAsync()
         {
+            await base.InitializeAsync(); 
             _repository = new Repository<User, UserId>(DbContext);
         }
 

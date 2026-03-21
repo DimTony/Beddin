@@ -54,7 +54,7 @@ namespace Beddin.IntegrationTests.Infrastructure
         private Respawner _respawner = null!;
         private NpgsqlConnection _dbConnection = null!;
 
-        public async Task InitializeAsync()
+        public virtual async Task InitializeAsync()
         {
             await _postgres.StartAsync();
 
