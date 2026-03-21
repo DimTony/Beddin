@@ -30,6 +30,7 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: src/web/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -102,9 +103,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        working-directory: src/web
 
       - name: Build
         run: pnpm build
+        working-directory: src/web
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL_TEST }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
