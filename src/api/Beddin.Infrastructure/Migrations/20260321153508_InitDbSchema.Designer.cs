@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -13,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Beddin.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260320190605_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260321153508_InitDbSchema")]
+    partial class InitDbSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -170,9 +169,6 @@ namespace Beddin.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Point>("Location")
-                        .HasColumnType("geography(Point, 4326)");
-
                     b.Property<double>("Longitude")
                         .HasColumnType("double precision");
 
@@ -226,6 +222,9 @@ namespace Beddin.Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("ViewCount")
                         .HasColumnType("integer");
 
@@ -240,16 +239,30 @@ namespace Beddin.Infrastructure.Migrations
                     b.HasIndex("IsPublished")
                         .HasDatabaseName("ix_properties_is_published");
 
-                    b.HasIndex("Location")
-                        .HasDatabaseName("ix_properties_location");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "GIST");
-
                     b.HasIndex("Owner")
                         .HasDatabaseName("ix_properties_owner_id");
 
+                    b.HasIndex("Price")
+                        .HasDatabaseName("ix_listings_price_active")
+                        .HasFilter("\"Status\" = 'Active'");
+
+                    b.HasIndex("PublishedAt")
+                        .HasDatabaseName("ix_listings_published_at")
+                        .HasFilter("\"PublishedAt\" IS NOT NULL");
+
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_properties_status");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("IsFeatured", "Status")
+                        .HasDatabaseName("ix_listings_featured_status");
+
+                    b.HasIndex("Status", "City")
+                        .HasDatabaseName("ix_listings_status_city");
+
+                    b.HasIndex("Type", "Listing")
+                        .HasDatabaseName("ix_listings_type");
 
                     b.ToTable("Properties");
                 });
@@ -299,7 +312,7 @@ namespace Beddin.Infrastructure.Migrations
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid?>("PropertyId")
+                    b.Property<Guid>("PropertyId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("PropertyImageId")
@@ -315,11 +328,204 @@ namespace Beddin.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PropertyId")
-                        .HasDatabaseName("ix_property_images_property_id");
+                        .HasDatabaseName("ix_property_images_listing_id");
 
-                    b.HasIndex("PropertyImageId");
+                    b.HasIndex("PropertyId", "IsPrimary")
+                        .IsUnique()
+                        .HasDatabaseName("uix_property_images_one_cover_per_listing")
+                        .HasFilter("\"IsPrimary\" = true");
 
                     b.ToTable("PropertyImages");
+                });
+
+            modelBuilder.Entity("Beddin.Domain.Aggregates.Users.Inquiry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecipientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("RepliedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("RequestedViewingAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId")
+                        .HasDatabaseName("ix_inquiries_property_id");
+
+                    b.HasIndex("SenderId")
+                        .HasDatabaseName("ix_inquiries_sender_id");
+
+                    b.HasIndex("PropertyId", "SenderId")
+                        .HasDatabaseName("ix_inquiries_property_sender");
+
+                    b.HasIndex("RecipientId", "Status")
+                        .HasDatabaseName("ix_inquiries_recipient_status");
+
+                    b.ToTable("Inquiries");
+                });
+
+            modelBuilder.Entity("Beddin.Domain.Aggregates.Users.SavedSearch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AlertEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastAlertSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MaxBedrooms")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("MaxPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MaxSizeInSqm")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MinBedrooms")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("MinPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MinSizeInSqm")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PropertyType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TransactionType")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlertEnabled")
+                        .HasDatabaseName("ix_saved_searches_alert_enabled")
+                        .HasFilter("\"AlertEnabled\" = true");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_saved_searches_user_id");
+
+                    b.HasIndex("MinPrice", "MaxPrice");
+
+                    b.HasIndex("City", "State", "Country");
+
+                    b.ToTable("SavedSearches");
+                });
+
+            modelBuilder.Entity("Beddin.Domain.Aggregates.Users.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_email");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_users_active")
+                        .HasFilter("\"IsActive\" = true");
+
+                    b.HasIndex("Role")
+                        .HasDatabaseName("ix_users_role");
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Beddin.Domain.Aggregates.Users.UserSession", b =>
@@ -397,6 +603,13 @@ namespace Beddin.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("Beddin.Domain.Aggregates.Properties.Property", b =>
+                {
+                    b.HasOne("Beddin.Domain.Aggregates.Users.User", null)
+                        .WithMany("Listings")
+                        .HasForeignKey("UserId");
+                });
+
             modelBuilder.Entity("Beddin.Domain.Aggregates.Properties.PropertyAmenity", b =>
                 {
                     b.HasOne("Beddin.Domain.Aggregates.Properties.Amenity", "Amenity")
@@ -424,16 +637,50 @@ namespace Beddin.Infrastructure.Migrations
             modelBuilder.Entity("Beddin.Domain.Aggregates.Properties.PropertyImage", b =>
                 {
                     b.HasOne("Beddin.Domain.Aggregates.Properties.Property", "Property")
-                        .WithMany()
-                        .HasForeignKey("PropertyId");
-
-                    b.HasOne("Beddin.Domain.Aggregates.Properties.Property", null)
                         .WithMany("Images")
-                        .HasForeignKey("PropertyImageId")
+                        .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Property");
+                });
+
+            modelBuilder.Entity("Beddin.Domain.Aggregates.Users.Inquiry", b =>
+                {
+                    b.HasOne("Beddin.Domain.Aggregates.Properties.Property", "Property")
+                        .WithMany("Inquiries")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Beddin.Domain.Aggregates.Users.User", "Recipient")
+                        .WithMany("ReceivedInquiries")
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Beddin.Domain.Aggregates.Users.User", "Sender")
+                        .WithMany("SentInquiries")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+
+                    b.Navigation("Recipient");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("Beddin.Domain.Aggregates.Users.SavedSearch", b =>
+                {
+                    b.HasOne("Beddin.Domain.Aggregates.Users.User", "User")
+                        .WithMany("SavedSearches")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Beddin.Domain.Aggregates.Properties.Property", b =>
@@ -445,6 +692,19 @@ namespace Beddin.Infrastructure.Migrations
                     b.Navigation("Favorites");
 
                     b.Navigation("Images");
+
+                    b.Navigation("Inquiries");
+                });
+
+            modelBuilder.Entity("Beddin.Domain.Aggregates.Users.User", b =>
+                {
+                    b.Navigation("Listings");
+
+                    b.Navigation("ReceivedInquiries");
+
+                    b.Navigation("SavedSearches");
+
+                    b.Navigation("SentInquiries");
                 });
 #pragma warning restore 612, 618
         }

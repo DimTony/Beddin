@@ -41,3 +41,6 @@ var app = builder.Build();
 app.UseApiMiddleware();
 app.Run();
 
+// Make Program accessible to integration tests
+public partial class Program { }
+

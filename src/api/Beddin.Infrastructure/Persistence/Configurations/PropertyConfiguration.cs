@@ -49,9 +49,18 @@ namespace Beddin.Infrastructure.Persistence.Configurations
             builder.Property(p => p.Latitude);
             builder.Property(p => p.Longitude);
 
-            builder.Property(p => p.Location)
-                .HasColumnType("geography(Point, 4326)")   // PostGIS type
-                .IsRequired(false);
+            //if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+            //{
+                builder.Ignore(x => x.Location);
+            //}
+            //else
+            //{
+            //    builder.Property(p => p.Location)
+            //    .HasColumnType("geography(Point, 4326)")   // PostGIS type
+            //    .IsRequired(false);
+            //}
+
+            
 
             builder.Property(p => p.Bedrooms).IsRequired();
             builder.Property(p => p.Bathrooms).HasColumnType("decimal(4,1)").IsRequired();
@@ -90,11 +99,31 @@ namespace Beddin.Infrastructure.Persistence.Configurations
                 .HasForeignKey("BookingId")
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasIndex(l => new { l.Status, l.City })
+               .HasDatabaseName("ix_listings_status_city");
+
+            builder.HasIndex(l => new { l.Type, l.Listing })
+               .HasDatabaseName("ix_listings_type");
+
+            builder.HasIndex(x => x.Price)
+                .HasDatabaseName("ix_listings_price_active")
+                .HasFilter("\"Status\" = 'Active'");
+
+            builder.HasIndex(l => new { l.IsFeatured, l.Status })
+               .HasDatabaseName("ix_listings_featured_status");
+
+            builder.HasIndex(l => l.PublishedAt)
+               .HasFilter("\"PublishedAt\" IS NOT NULL")
+               .HasDatabaseName("ix_listings_published_at");
+
             builder.HasIndex(p => p.Owner).HasDatabaseName("ix_properties_owner_id");
             builder.HasIndex(p => p.Status).HasDatabaseName("ix_properties_status");
             builder.HasIndex(p => p.IsPublished).HasDatabaseName("ix_properties_is_published");
             builder.HasIndex(p => p.City).HasDatabaseName("ix_properties_city");
-            builder.HasIndex(p => p.Location).HasMethod("GIST").HasDatabaseName("ix_properties_location"); // spatial index
+
+            // NOTE: Geospatial index (GIST on geometry column) added in v0.2 migration.
+
+            //builder.HasIndex(p => p.Location).HasMethod("GIST").HasDatabaseName("ix_properties_location"); // spatial index
 
             // Ignore domain events — handled by the dispatcher, not persisted
             builder.Ignore(p => p.DomainEvents);

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Beddin.Domain.Aggregates.Properties
 {
-    public class Amenity : Entity<AmenityId>
+    public sealed class Amenity : Entity<AmenityId>
     {
         public string Name { get; private set; } = default!;
         public string? Icon { get; private set; }

@@ -2,7 +2,7 @@
 
 namespace Beddin.Domain.Aggregates.Properties
 {
-    public class Booking : AggregateRoot<BookingId>
+    public sealed class Booking : AggregateRoot<BookingId>
     {
         public PropertyId PropertyId { get; private set; } = null!;
         public UserId ViewerId { get; private set; } = null!;

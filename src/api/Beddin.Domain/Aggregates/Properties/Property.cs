@@ -2,10 +2,11 @@
 using NetTopologySuite.Geometries;
 using Beddin.Domain.Common;
 using Beddin.Domain.Events;
+using Beddin.Domain.Aggregates.Users;
 
 namespace Beddin.Domain.Aggregates.Properties
 {
-    public class Property : AggregateRoot<PropertyId>
+    public sealed class Property : AggregateRoot<PropertyId>
     {
         public string Title { get; private set; } = default!;
         public string Description { get; private set; } = default!;
@@ -56,10 +57,12 @@ namespace Beddin.Domain.Aggregates.Properties
         private readonly List<Booking> _bookings = new();
         public IReadOnlyCollection<Booking> Bookings => _bookings;
 
+        private readonly List<Inquiry> _inquiries = new();
+        public IReadOnlyCollection<Inquiry> Inquiries => _inquiries;
+
         private Property() { }
 
         public static Property Create(
-            string title,
             string description,
             UserId owner,
             string primaryImage,
@@ -77,6 +80,7 @@ namespace Beddin.Domain.Aggregates.Properties
             decimal squareFeet,
             decimal lotSize,
             decimal price,
+            string? title,
             DateOnly? yearBuilt = null)
         {
             if (string.IsNullOrWhiteSpace(title))

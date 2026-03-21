@@ -10,30 +10,38 @@ namespace Beddin.Infrastructure.Persistence
     public class AppDbContext : DbContext, IReadDbContext, IUnitOfWork
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public DbSet<User> Users => Set<User>();
+        public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
         public DbSet<UserSession> UserSessions => Set<UserSession>();
         public DbSet<Property> Properties => Set<Property>();
         public DbSet<Favorite> Favorites => Set<Favorite>();
         public DbSet<Amenity> Amenities => Set<Amenity>();
         public DbSet<PropertyAmenity> PropertyAmenities => Set<PropertyAmenity>();
         public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
+        public DbSet<Inquiry> Inquiries => Set<Inquiry>();
 
+        IQueryable<User> IReadDbContext.Users => Users;
+        IQueryable<SavedSearch> IReadDbContext.SavedSearches => SavedSearches;
         IQueryable<UserSession> IReadDbContext.UserSessions => UserSessions;
         IQueryable<Property> IReadDbContext.Properties => Properties;
         IQueryable<Favorite> IReadDbContext.Favorites => Favorites;
         IQueryable<Amenity> IReadDbContext.Amenities => Amenities;
         IQueryable<PropertyAmenity> IReadDbContext.PropertyAmenities => PropertyAmenities;
         IQueryable<PropertyImage> IReadDbContext.PropertyImages => PropertyImages;
+        IQueryable<Inquiry> IReadDbContext.Inquiries => Inquiries;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Ignore<DomainEvent>();
             modelBuilder.Ignore<UserId>();
+            modelBuilder.Ignore<SavedSearchId>();
             modelBuilder.Ignore<UserSessionId>();
             modelBuilder.Ignore<PropertyId>();
             modelBuilder.Ignore<FavoriteId>();
             modelBuilder.Ignore<AmenityId>();
             modelBuilder.Ignore<PropertyAmenityId>();
             modelBuilder.Ignore<PropertyImageId>();
+            modelBuilder.Ignore<InquiryId>();
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
@@ -46,6 +54,10 @@ namespace Beddin.Infrastructure.Persistence
             var userIdConverter = new ValueConverter<UserId, Guid>(
                 id => id.Value,
                 value => new UserId(value));
+
+            var savedSearchIdConverter = new ValueConverter<SavedSearchId, Guid>(
+               id => id.Value,
+               value => new SavedSearchId(value));
 
             var userSessionIdConverter = new ValueConverter<UserSessionId, Guid>(
                 id => id.Value,
@@ -71,6 +83,10 @@ namespace Beddin.Infrastructure.Persistence
                 id => id.Value,
                 value => new PropertyImageId(value));
 
+            var inquiryIdConverter = new ValueConverter<InquiryId, Guid>(
+                id => id.Value,
+                value => new InquiryId(value));
+
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 foreach (var property in entityType.GetProperties())
@@ -78,6 +94,8 @@ namespace Beddin.Infrastructure.Persistence
             
                     if (property.ClrType == typeof(UserId))
                         property.SetValueConverter(userIdConverter);
+                    else if (property.ClrType == typeof(SavedSearchId))
+                        property.SetValueConverter(savedSearchIdConverter);
                     else if (property.ClrType == typeof(UserSessionId))
                         property.SetValueConverter(userSessionIdConverter);
                     else if (property.ClrType == typeof(PropertyId))
@@ -90,6 +108,8 @@ namespace Beddin.Infrastructure.Persistence
                         property.SetValueConverter(propertyAmenityIdConverter);
                     else if (property.ClrType == typeof(PropertyImageId))
                         property.SetValueConverter(propertyImageIdConverter);
+                    else if (property.ClrType == typeof(InquiryId))
+                        property.SetValueConverter(inquiryIdConverter);
                 }
             }
         }

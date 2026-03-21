@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Beddin.Domain.Aggregates.Users
 {
-    public class UserSession : AggregateRoot<UserSessionId>
+    public sealed class UserSession : AggregateRoot<UserSessionId>
     {
         public UserId UserId { get; private set; } = default!;
         //public string Token { get; private set; } = default!;

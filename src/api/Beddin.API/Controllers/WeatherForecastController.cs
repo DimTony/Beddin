@@ -1,3 +1,7 @@
+using Beddin.Application.Features.Users.Commands.CreateUser;
+using Beddin.Domain.Aggregates.Users;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Beddin.API.Controllers
@@ -12,10 +16,12 @@ namespace Beddin.API.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly IMediator _mediator;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IMediator mediator)
         {
             _logger = logger;
+            _mediator = mediator;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -28,6 +34,17 @@ namespace Beddin.API.Controllers
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
+        }
+
+      
+
+        [HttpPost("Register")]
+        public async Task<IActionResult> SubmitUserRegistration(
+            [FromBody] UserRegistrationPayload payload)
+        {
+            var cmd = new CreateUserCommand(payload.FirstName, payload.LastName, payload.Email, payload.Role, payload.Password);
+            var result = await _mediator.Send(cmd);
+            return Ok(result);
         }
     }
 }

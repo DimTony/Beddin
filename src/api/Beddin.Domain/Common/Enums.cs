@@ -6,6 +6,34 @@ using System.Threading.Tasks;
 
 namespace Beddin.Domain.Common
 {
+    //public enum UserRole
+    //{
+    //    Buyer = 0,
+    //    Owner = 1,
+    //    Admin = 2
+    //}
+
+    public enum InquiryStatus
+    {
+        Unread = 0,
+        Read = 1,
+        Replied = 2,
+        Archived = 3
+    }
+
+    public enum InquiryType
+    {
+        General = 0,
+        ViewingRequest = 1,
+        PriceNegotiation = 2
+    }
+    public enum TransactionType
+    {
+        Sale = 0,
+        Rent = 1,
+        ShortLet = 2,
+        JointVenture = 3
+    }
     public enum AlertFrequency
     {
         Immediate = 0,

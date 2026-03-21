@@ -53,4 +53,18 @@ namespace Beddin.Domain.Common
         public override string ToString() => Value.ToString();
     }
 
+    public record InquiryId(Guid Value)
+    {
+        public static InquiryId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+    }
+
+    public record SavedSearchId(Guid Value)
+    {
+        public static SavedSearchId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+    }
+
+    
+
 }

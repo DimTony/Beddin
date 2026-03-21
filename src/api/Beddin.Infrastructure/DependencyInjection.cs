@@ -56,6 +56,7 @@ namespace Beddin.Infrastructure
         {
             services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
             // Add concrete repositories (e.g. IPropertyRepository -> PropertyRepository) as you implement them:
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserSessionRepository, UserSessionRepository>();
             services.AddScoped<IPropertyRepository, PropertyRepository>();
             return services;
