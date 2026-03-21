@@ -13,31 +13,6 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: Move issue to Backlog when opened
-        if: github.event_name == 'issues' && github.event.action == 'opened'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.PROJECT_TOKEN }}
-          script: |
-            const query = `
-              query($owner: String!, $repo: String!, $number: Int!) {
-                repository(owner: $owner, name: $repo) {
-                  issue(number: $number) {
-                    id
-                    projectItems(first: 10) {
-                      nodes { id project { id } }
-                    }
-                  }
-                }
-              }`;
-            const result = await github.graphql(query, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              number: context.issue.number,
-            });
-            console.log('Issue opened — board automation handled by GitHub Projects built-in workflow.');
-            console.log('Ensure "Item added to project ? set Status = Backlog" is enabled in Projects settings.');
-
       - name: Move linked issues to In review when PR opens
         if: >
           github.event_name == 'pull_request' &&
@@ -45,7 +20,7 @@ jobs:
           (github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft)
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.PROJECT_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const pr = context.payload.pull_request;
             const body = pr.body || '';
