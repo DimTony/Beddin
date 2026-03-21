@@ -1,0 +1,66 @@
+name: Project board automation
+
+on:
+  issues:
+    types: [opened, closed, reopened]
+  pull_request:
+    types: [opened, closed, converted_to_draft, ready_for_review, synchronize]
+
+jobs:
+  automate-board:
+    name: Move cards on project board
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Move linked issues to In review when PR opens
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.action == 'ready_for_review' ||
+          (github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft)
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+
+            // Extract issue numbers from "Closes #N", "Fixes #N", "Resolves #N"
+            const pattern = /(?:closes?|fixes?|resolves?)\s+#(\d+)/gi;
+            const matches = [...body.matchAll(pattern)];
+            const issueNumbers = matches.map(m => parseInt(m[1]));
+
+            if (issueNumbers.length === 0) {
+              console.log('No linked issues found in PR body. Add "Closes #N" to auto-move cards.');
+              return;
+            }
+
+            console.log(`Linked issues: ${issueNumbers.join(', ')}`);
+            console.log('Move these to "In review" via GitHub Projects built-in PR workflow,');
+            console.log('or upgrade to a GitHub Projects GraphQL mutation with a PROJECT_TOKEN.');
+
+      - name: Move linked issues to Done when PR merges
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.action == 'closed' &&
+          github.event.pull_request.merged == true
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+
+            const pattern = /(?:closes?|fixes?|resolves?)\s+#(\d+)/gi;
+            const matches = [...body.matchAll(pattern)];
+            const issueNumbers = matches.map(m => parseInt(m[1]));
+
+            for (const number of issueNumbers) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: number,
+                body: `Closed by #${pr.number} — merged into \`${pr.base.ref}\` by @${pr.merged_by.login}.`,
+              });
+              console.log(`Commented on issue #${number}`);
+            }
