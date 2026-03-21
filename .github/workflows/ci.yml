@@ -45,7 +45,7 @@ jobs:
         working-directory: src/web
 
       - name: Run tests
-        run: pnpm test --coverage
+        run: pnpm test
         working-directory: src/web
 
       - name: Upload coverage
