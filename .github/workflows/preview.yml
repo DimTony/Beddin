@@ -46,7 +46,6 @@ jobs:
         run: |
           DEPLOY_URL=$(npx vercel --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tail -1)
           echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
-        working-directory: src/web
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
