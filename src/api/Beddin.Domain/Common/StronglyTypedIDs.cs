@@ -5,7 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Beddin.Domain.Common
-{
+{    
+    public record AuditLogId(Guid Value)
+    {
+        public static AuditLogId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+    }
     public record UserSessionId(Guid Value)
     {
         public static UserSessionId New() => new(Guid.NewGuid());

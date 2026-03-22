@@ -4,13 +4,16 @@ using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Beddin.Domain.Aggregates.AuditLog;
 
 namespace Beddin.Infrastructure.Persistence
 {
-    public class AppDbContext : DbContext, IReadDbContext, IUnitOfWork
+    public class AppDbContext :IdentityDbContext<ApplicationUser>, IReadDbContext, IUnitOfWork
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-        public DbSet<User> Users => Set<User>();
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+        public DbSet<User> AppUsers => Set<User>();
         public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
         public DbSet<UserSession> UserSessions => Set<UserSession>();
         public DbSet<Property> Properties => Set<Property>();
@@ -20,7 +23,8 @@ namespace Beddin.Infrastructure.Persistence
         public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
         public DbSet<Inquiry> Inquiries => Set<Inquiry>();
 
-        IQueryable<User> IReadDbContext.Users => Users;
+        IQueryable<AuditLog> IReadDbContext.AuditLogs => AuditLogs;
+        IQueryable<User> IReadDbContext.AppUsers => AppUsers;
         IQueryable<SavedSearch> IReadDbContext.SavedSearches => SavedSearches;
         IQueryable<UserSession> IReadDbContext.UserSessions => UserSessions;
         IQueryable<Property> IReadDbContext.Properties => Properties;
@@ -29,10 +33,17 @@ namespace Beddin.Infrastructure.Persistence
         IQueryable<PropertyAmenity> IReadDbContext.PropertyAmenities => PropertyAmenities;
         IQueryable<PropertyImage> IReadDbContext.PropertyImages => PropertyImages;
         IQueryable<Inquiry> IReadDbContext.Inquiries => Inquiries;
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplySoftDelete();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Ignore<DomainEvent>();
+            modelBuilder.Ignore<AuditLogId>();
             modelBuilder.Ignore<UserId>();
             modelBuilder.Ignore<SavedSearchId>();
             modelBuilder.Ignore<UserSessionId>();
@@ -47,10 +58,41 @@ namespace Beddin.Infrastructure.Persistence
 
             RegisterStronglyTypedIdConverters(modelBuilder);
 
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                        .HasQueryFilter(GenerateSoftDeleteFilter(entityType.ClrType));
+                }
+            }
+
             base.OnModelCreating(modelBuilder);
+        }
+        private void ApplySoftDelete()
+        {
+            foreach (var entry in ChangeTracker.Entries<ISoftDeletable>())
+            {
+                if (entry.State == EntityState.Deleted)
+                {
+                    entry.State = EntityState.Modified;
+                    entry.Entity.Delete();
+                }
+            }
+        }
+        private static System.Linq.Expressions.LambdaExpression GenerateSoftDeleteFilter(Type entityType)
+        {
+            var parameter = System.Linq.Expressions.Expression.Parameter(entityType, "e");
+            var property = System.Linq.Expressions.Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+            var body = System.Linq.Expressions.Expression.Equal(property, System.Linq.Expressions.Expression.Constant(false));
+            return System.Linq.Expressions.Expression.Lambda(body, parameter);
         }
         private static void RegisterStronglyTypedIdConverters(ModelBuilder modelBuilder)
         {
+            var auditLogIdConverter = new ValueConverter<AuditLogId, Guid>(
+                id => id.Value,
+                value => new AuditLogId(value));
+
             var userIdConverter = new ValueConverter<UserId, Guid>(
                 id => id.Value,
                 value => new UserId(value));
@@ -94,6 +136,8 @@ namespace Beddin.Infrastructure.Persistence
             
                     if (property.ClrType == typeof(UserId))
                         property.SetValueConverter(userIdConverter);
+                    else if (property.ClrType == typeof(AuditLogId))
+                        property.SetValueConverter(auditLogIdConverter);
                     else if (property.ClrType == typeof(SavedSearchId))
                         property.SetValueConverter(savedSearchIdConverter);
                     else if (property.ClrType == typeof(UserSessionId))

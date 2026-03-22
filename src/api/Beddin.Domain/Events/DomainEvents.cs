@@ -7,12 +7,30 @@ using System.Threading.Tasks;
 
 namespace Beddin.Domain.Events
 {
+
+    
+        public record AuditLogRecordedEvent(
+      AuditLogId AuditLogId,
+      string Action,
+      string Resource,
+      Guid? ResourceId,
+      string? OldValue,
+      string? NewValue,
+      string? IpAddress) : DomainEvent;
+    public record AuditLogUpdatedEvent(
+      AuditLogId AuditLogId,
+      string Action,
+      string Resource,
+      Guid? ResourceId,
+      string? OldValue,
+      string? NewValue,
+      string? IpAddress) : DomainEvent;
     public record UserCreatedEvent(
       UserId UserId,
       string FirstName,
       string LastName,
       string Email,
-      string Role) : DomainEvent;
+      UserRole Role) : DomainEvent;
 
     public record EmailUpdatedEvent(
      UserId UserId,
@@ -25,7 +43,7 @@ namespace Beddin.Domain.Events
       string FirstName,
       string LastName,
       string Email,
-     string NewRole) : DomainEvent;
+     UserRole NewRole) : DomainEvent;
 
     public record UserDeactivatedEvent(
      UserId UserId,

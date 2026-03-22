@@ -1,21 +1,30 @@
 ﻿using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Common;
 using Beddin.Domain.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace Beddin.Domain.Aggregates.Users
 {
+    public class ApplicationUser : IdentityUser
+    {
+        //public Guid UserId { get; set; } // Link to DDD User
+        // Only auth-related extensions here
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiry { get; set; }
+        public bool IsActive { get; set; } = false;
+
+        public int FailedLoginAttempts { get; set; } = 0;
+        public DateTime? LockedOutUntil { get; set; }
+    }
     public sealed class User : AggregateRoot<UserId>
     {
         public string FirstName { get; private set; } = default!;
         public string LastName { get; private set; } = default!;
         public string Email { get; private set; } = default!;
-        public string Role { get; private set; } = default!;
-        public bool IsActive { get; private set; }
+        public UserRole Role { get; private set; }
+        public bool IsActive { get; set; } = false;
+
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
 
@@ -38,7 +47,7 @@ namespace Beddin.Domain.Aggregates.Users
         public static User Create(
             string firstName,
             string lastName,
-            string role,
+            UserRole role,
             string? email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -51,7 +60,6 @@ namespace Beddin.Domain.Aggregates.Users
                 LastName = lastName,
                 Email = email,
                 Role = role,
-                IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -66,14 +74,6 @@ namespace Beddin.Domain.Aggregates.Users
             return user;
         }
 
-        public void UpdateRole(string newRole)
-        {
-            Role = newRole;
-            UpdatedAt = DateTime.UtcNow;
-
-            RaiseDomainEvent(new RoleUpdatedEvent(Id, FirstName, LastName, Email, newRole));
-        }
-
         public void UpdateEmail(string newEmail)
         {
             Email = newEmail;
@@ -82,15 +82,12 @@ namespace Beddin.Domain.Aggregates.Users
             RaiseDomainEvent(new EmailUpdatedEvent(Id, FirstName, LastName, newEmail));
         }
 
-        //
-
         public void Deactivate()
         {
             IsActive = false;
             UpdatedAt = DateTime.UtcNow;
 
             RaiseDomainEvent(new UserDeactivatedEvent(Id, FirstName, LastName, Email));
-
         }
     }
 }

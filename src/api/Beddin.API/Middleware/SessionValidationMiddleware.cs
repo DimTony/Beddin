@@ -43,7 +43,7 @@ namespace Beddin.API.Middleware
             }
 
             // Validate session is still active in DB
-            var session = await sessionRepo.GetByIdAsync(sessionId);
+            var session = await sessionRepo.GetById(sessionId);
             if (session is null || !session.IsActive)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;

@@ -1,6 +1,8 @@
 ﻿using Beddin.API.Middleware;
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Infrastructure.Persistence;
 using Beddin.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.Identity;
 
 namespace Beddin.API.Extensions
 {
@@ -18,7 +20,8 @@ namespace Beddin.API.Extensions
             {
                 var context = services.GetRequiredService<AppDbContext>();
                 var configuration = services.GetRequiredService<IConfiguration>();
-                var seeder = new DatabaseSeeder(context, logger, configuration);
+                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                var seeder = new DatabaseSeeder(userManager, context, logger, configuration);
 
                 logger.LogInformation("Starting database seeding...");
 

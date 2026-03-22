@@ -1,4 +1,5 @@
-﻿using Beddin.Domain.Aggregates.Properties;
+﻿using Beddin.Domain.Aggregates.AuditLog;
+using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using System;
@@ -10,7 +11,9 @@ namespace Beddin.Application.Common.Interfaces
 {
     public interface IReadDbContext
     {
-        IQueryable<User> Users { get; }
+        
+        IQueryable<AuditLog> AuditLogs { get; }
+        IQueryable<User> AppUsers { get; }
         IQueryable<SavedSearch> SavedSearches { get; }
         IQueryable<UserSession> UserSessions { get; }
         IQueryable<Property> Properties { get; }

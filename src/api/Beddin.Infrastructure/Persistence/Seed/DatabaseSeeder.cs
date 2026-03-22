@@ -1,5 +1,9 @@
-﻿using Beddin.Application.Common.Interfaces;
+﻿using Azure.Core;
+using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
+using Beddin.Domain.Common;
+using Beddin.Infrastructure.Persistence.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -7,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 
@@ -14,11 +19,13 @@ namespace Beddin.Infrastructure.Persistence.Seed
 {
     public class DatabaseSeeder
     {
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly AppDbContext _context;
         private readonly ILogger<DatabaseSeeder> _logger;
         private readonly IConfiguration _configuration;
-        public DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder> logger, IConfiguration configuration)
+        public DatabaseSeeder(UserManager<ApplicationUser> userManager, AppDbContext context, ILogger<DatabaseSeeder> logger, IConfiguration configuration)
         {
+            _userManager = userManager;
             _context = context;
             _logger = logger;
             _configuration = configuration;
@@ -73,15 +80,38 @@ namespace Beddin.Infrastructure.Persistence.Seed
                 ?? "Administrator";
             var role = _configuration.GetValue<string>("DatabaseSeeding:AdminUser:Role")
                 ?? "Admin";
+            var password = _configuration.GetValue<string>("DatabaseSeeding:AdminUser:Password")
+                ?? "Admin123!";
 
             var adminUser = User.Create(
                 firstName: firstName,
                 lastName: lastName,
-                role: role,
+                role: UserRole.Admin,
                 email: adminEmail
             );
 
-            _context.Users.Add(adminUser);
+            var identityUser = new ApplicationUser
+            {
+                Id = adminUser.Id.Value.ToString(),
+                UserName = adminUser.Email,
+                Email = adminUser.Email,
+                EmailConfirmed = false,
+                FailedLoginAttempts = 0
+            };
+
+            var identityResult = await _userManager.CreateAsync(identityUser, password);
+            if (!identityResult.Succeeded)
+            {
+                var errors = string.Join(", ", identityResult.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to create admin user: {Errors}", errors);
+                return;
+            }
+
+            // Add role claim
+            await _userManager.AddClaimAsync(identityUser, new System.Security.Claims.Claim("role", UserRole.Admin.ToString()));
+
+            // Save domain user
+            _context.AppUsers.Add(adminUser);
             await _context.SaveChangesAsync();
 
             _logger.LogInformation(

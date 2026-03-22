@@ -6,12 +6,19 @@ using System.Threading.Tasks;
 
 namespace Beddin.Domain.Common
 {
-    //public enum UserRole
-    //{
-    //    Buyer = 0,
-    //    Owner = 1,
-    //    Admin = 2
-    //}
+    public enum AuditStatus
+    {
+        Attempted = 0,
+        Succeeded = 1,
+        Failed = 2
+
+    }
+    public enum UserRole
+    {
+        Buyer = 0,
+        Owner = 1,
+        Admin = 2
+    }
 
     public enum InquiryStatus
     {

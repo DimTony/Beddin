@@ -1,16 +1,16 @@
-﻿using FluentValidation;
-using Beddin.Domain.Aggregates.Users;
+﻿using Beddin.Domain.Aggregates.Users;
+using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Beddin.Application.Features.Users.Commands.CreateUser
+namespace Beddin.Application.Features.Users.Commands.RegisterUser
 {
-    public class CreateUserValidator : AbstractValidator<CreateUserCommand>
+    public class RegisterUserValidator : AbstractValidator<RegisterCommand>
     {
-        public CreateUserValidator()
+        public RegisterUserValidator()
         {
             RuleFor(x => x.Email)
                .NotEmpty().WithMessage("Email is required.")
@@ -36,7 +36,8 @@ namespace Beddin.Application.Features.Users.Commands.CreateUser
                 .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
                 .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
                 .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter.")
-                .Matches("[0-9]").WithMessage("Password must contain at least one number.");
+                .Matches("[0-9]").WithMessage("Password must contain at least one number.")
+                .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
 
             RuleFor(x => x.Role)
                 .NotEmpty().WithMessage("Role is required.")

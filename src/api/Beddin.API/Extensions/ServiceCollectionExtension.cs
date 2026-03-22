@@ -21,8 +21,10 @@ namespace Beddin.API.Extensions
             {
                 cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly);
 
-                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(FeatureFlagBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AuditLogBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(DomainEventBehavior<,>));
             });
 

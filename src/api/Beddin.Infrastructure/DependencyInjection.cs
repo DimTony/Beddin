@@ -1,6 +1,10 @@
 ﻿using Beddin.Application.Common.Interfaces;
+using Beddin.Application.Common.Options;
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Infrastructure.Persistence;
 using Beddin.Infrastructure.Persistence.Repositories;
+using Beddin.Infrastructure.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +23,7 @@ namespace Beddin.Infrastructure
             services
                 .AddDatabase(configuration)
                 .AddRepositories()
-                //.AddServices()
+                .AddServices()
                 .AddObservability(configuration);
 
             return services;
@@ -44,11 +48,26 @@ namespace Beddin.Infrastructure
                 )
             );
 
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddDefaultTokenProviders();
+
             // AppDbContext now implements IUnitOfWork
             services.AddScoped<IUnitOfWork>(provider =>
                 provider.GetRequiredService<AppDbContext>());
 
             services.AddScoped<IDomainEventCollector, EfDomainEventCollector>();
+
+            services.Configure<EmailOptions>(
+                configuration.GetSection(EmailOptions.SectionName));
+
+            //services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+
+            //services.Configure<ApprovalPolicyOptions>(
+            //    configuration.GetSection(ApprovalPolicyOptions.SectionName));
+
+            //services.Configure<DatabaseSeedOptions>(
+                //configuration.GetSection(DatabaseSeedOptions.SectionName));
 
             return services;
         }
@@ -59,6 +78,22 @@ namespace Beddin.Infrastructure
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserSessionRepository, UserSessionRepository>();
             services.AddScoped<IPropertyRepository, PropertyRepository>();
+            return services;
+        }
+
+        private static IServiceCollection AddServices(
+            this IServiceCollection services)
+        {
+            services.AddHttpContextAccessor();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IAuditLogService, AuditLogService>();
+
+
+            // Auth Services
+            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<IEmailService, EmailService>();
+
             return services;
         }
         public static IServiceCollection AddObservability(
