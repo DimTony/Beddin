@@ -28,7 +28,7 @@
       "secrets": [
         {
           "name": "Jwt__ExpirationMinutes",
-          "value": "20"
+          "valueFrom": "20"
         },
         {
           "name": "ConnectionStrings__DefaultConnection",
@@ -36,11 +36,11 @@
         },
         {
           "name": "Jwt__Issuer",
-          "value": "Beddin"
+          "valueFrom": "Beddin"
         },
         {
           "name": "Jwt__RefreshTokenExpiryMinutes",
-          "value": "10080"
+          "valueFrom": "10080"
         },
         {
           "name": "Jwt__SecretKey",
@@ -48,7 +48,7 @@
         },
         {
           "name": "Jwt__Audience",
-          "value": "BeddinUsers"
+          "valueFrom": "BeddinUsers"
         }
       ],
       "environmentFiles": [],
