@@ -1,4 +1,5 @@
 ﻿using Beddin.Application.Common.DTOs;
+using Beddin.Application.Common.Exceptions;
 using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
@@ -9,80 +10,53 @@ namespace Beddin.Application.Features.Users.Commands.RegisterUser
 {
     public sealed class RegisterHandler : IRequestHandler<RegisterCommand, ApiResponse<UserDto>>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public RegisterHandler(
-            UserManager<ApplicationUser> userManager,
+            IRoleRepository roleRepository,
             IUserRepository userRepository,
             IUnitOfWork unitOfWork)
         {
-            _userManager = userManager;
+            _roleRepository = roleRepository;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
         }
 
         public async Task<ApiResponse<UserDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
-            // ── Guards ────────────────────────────────────────────────────────────
-            var existingAppUser = await _userRepository.GetByEmail(request.Email, cancellationToken);
-            var existingIdentityUser = await _userManager.FindByEmailAsync(request.Email);
+            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
-            if (existingAppUser != null || existingIdentityUser is not null)
+            var existingUser = await _userRepository.GetByEmail(normalizedEmail, cancellationToken);
+
+            if (existingUser != null)
                 return ApiResponse<UserDto>.Fail("User with this email already exists.");
 
-            if (!Enum.TryParse<UserRole>(request.Role, true, out var userRole))
+            var role = await _roleRepository.GetByIdAsync(new RoleId(request.Role), cancellationToken);
+
+            if (role == null)
                 return ApiResponse<UserDto>.Fail("Invalid role specified.");
 
-            // ── Build both users before touching any store ────────────────────────
-            var user = User.Create(request.FirstName, request.LastName, userRole, request.Email);
+            var user = User.Create(request.FirstName, request.LastName, role.Id, request.Password, request.Email);
 
-            var identityUser = new ApplicationUser
-            {
-                Id = user.Id.Value.ToString(),   // keep IDs in sync
-                UserName = request.Email,
-                Email = request.Email,
-                EmailConfirmed = false,
-                IsActive = false,
-                FailedLoginAttempts = 0
-            };
+            user.GenerateEmailConfirmationToken();
 
-            // ── Step 1: Identity (can't be inside EF transaction) ────────────────
-            var identityResult = await _userManager.CreateAsync(identityUser, request.Password);
-            if (!identityResult.Succeeded)
-            {
-                var errors = string.Join(", ", identityResult.Errors.Select(e => e.Description));
-                return ApiResponse<UserDto>.Fail($"Failed to create user: {errors}");
-            }
+            await _userRepository.AddAsync(user, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // ── Step 2: Domain + claim — roll back identity if anything fails ─────
-            try
-            {
-                await _userManager.AddClaimAsync(identityUser,
-                    new System.Security.Claims.Claim("role", userRole.ToString()));
-
-                await _userRepository.AddAsync(user, cancellationToken);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception)
-            {
-                // Compensate — delete the identity user so we don't leave orphans
-                await _userManager.DeleteAsync(identityUser);
-                throw;  // let the exception bubble — caller gets a 500, not a silent split
-            }
-
-            // ── Return ────────────────────────────────────────────────────────────
             var userDto = new UserDto(
                 user.Id.Value,
                 user.FirstName,
                 user.LastName,
                 user.Email,
-                user.Role.ToString(),
+                role.Name,
                 user.IsActive,
                 user.CreatedAt);
 
-            return ApiResponse<UserDto>.Ok(userDto, "User registered successfully!");
+            return ApiResponse<UserDto>.Ok(
+                userDto,
+                "Registration successful. Please check your email to confirm your account.");
         }
     }
 }

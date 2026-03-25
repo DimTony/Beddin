@@ -32,6 +32,7 @@ namespace Beddin.Application.Features.Users.Queries.GetActiveSessions
                 .Where(s => s.IsActive) // Only active sessions
                 .Select(s => new SessionDto(
                     s.Id.Value,
+                    s.UserId.Value,
                     s.IpAddress,
                     s.UserAgent,
                     s.CreatedAt,

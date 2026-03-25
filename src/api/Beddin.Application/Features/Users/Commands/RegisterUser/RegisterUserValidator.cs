@@ -40,9 +40,7 @@ namespace Beddin.Application.Features.Users.Commands.RegisterUser
                 .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
 
             RuleFor(x => x.Role)
-                .NotEmpty().WithMessage("Role is required.")
-                .Must(UserRoles.IsValid)
-                .WithMessage($"Role must be one of: {string.Join(", ", UserRoles.All)}");
+                .NotEmpty().WithMessage("Role UUID is required.");
         }
     }
 }

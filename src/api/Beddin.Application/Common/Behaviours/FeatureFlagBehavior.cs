@@ -1,4 +1,5 @@
-﻿using Beddin.Application.Common.Interfaces;
+﻿using Beddin.Application.Common.DTOs;
+using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Common;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -39,6 +40,8 @@ namespace Beddin.Application.Common.Behaviours
                     return (TResponse)(object)Result.Failure(
                         $"This feature is currently disabled: {flagged.FeatureFlag}");
 
+             
+
                 if (resultType.IsGenericType &&
                     resultType.GetGenericTypeDefinition() == typeof(Result<>))
                 {
@@ -48,8 +51,28 @@ namespace Beddin.Application.Common.Behaviours
                         .MakeGenericMethod(innerType);
 
                     return (TResponse)failureMethod.Invoke(null, new object[] {
-                    $"This feature is currently disabled: {flagged.FeatureFlag}"
-                })!;
+                        $"This feature is currently disabled: {flagged.FeatureFlag}"
+                    })!;
+                }
+
+                if (resultType.IsGenericType &&
+                    resultType.GetGenericTypeDefinition() == typeof(ApiResponse<>))
+                {
+                    var innerType = resultType.GetGenericArguments()[0];
+
+                    var constructedType = typeof(ApiResponse<>).MakeGenericType(innerType);
+
+                    var method = constructedType.GetMethod(
+                        nameof(ApiResponse<object>.Fail),
+                        new[] { typeof(string) });
+
+                    if (method == null)
+                        throw new InvalidOperationException("Fail(string) not found on ApiResponse<T>");
+
+                    return (TResponse)method.Invoke(null, new object[]
+                    {
+                         $"This feature is currently disabled: {flagged.FeatureFlag}"
+                    })!;
                 }
 
                 throw new InvalidOperationException(

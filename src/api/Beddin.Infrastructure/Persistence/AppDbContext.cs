@@ -9,11 +9,13 @@ using Beddin.Domain.Aggregates.AuditLog;
 
 namespace Beddin.Infrastructure.Persistence
 {
-    public class AppDbContext :IdentityDbContext<ApplicationUser>, IReadDbContext, IUnitOfWork
+    public class AppDbContext : DbContext, IReadDbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public DbSet<Role> Roles => Set<Role>();
+        public DbSet<User> Users => Set<User>();
+        public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-        public DbSet<User> AppUsers => Set<User>();
         public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
         public DbSet<UserSession> UserSessions => Set<UserSession>();
         public DbSet<Property> Properties => Set<Property>();
@@ -23,8 +25,10 @@ namespace Beddin.Infrastructure.Persistence
         public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
         public DbSet<Inquiry> Inquiries => Set<Inquiry>();
 
+        IQueryable<Role> IReadDbContext.Roles => Roles;
+        IQueryable<User> IReadDbContext.Users => Users;
+        IQueryable<PasswordResetToken> IReadDbContext.PasswordResetTokens => PasswordResetTokens;
         IQueryable<AuditLog> IReadDbContext.AuditLogs => AuditLogs;
-        IQueryable<User> IReadDbContext.AppUsers => AppUsers;
         IQueryable<SavedSearch> IReadDbContext.SavedSearches => SavedSearches;
         IQueryable<UserSession> IReadDbContext.UserSessions => UserSessions;
         IQueryable<Property> IReadDbContext.Properties => Properties;
@@ -44,7 +48,9 @@ namespace Beddin.Infrastructure.Persistence
         {
             modelBuilder.Ignore<DomainEvent>();
             modelBuilder.Ignore<AuditLogId>();
+            modelBuilder.Ignore<RoleId>();
             modelBuilder.Ignore<UserId>();
+            modelBuilder.Ignore<PasswordResetTokenId>();
             modelBuilder.Ignore<SavedSearchId>();
             modelBuilder.Ignore<UserSessionId>();
             modelBuilder.Ignore<PropertyId>();
@@ -93,9 +99,17 @@ namespace Beddin.Infrastructure.Persistence
                 id => id.Value,
                 value => new AuditLogId(value));
 
+            var roleIdConverter = new ValueConverter<RoleId, Guid>(
+                id => id.Value,
+                value => new RoleId(value));
+
             var userIdConverter = new ValueConverter<UserId, Guid>(
                 id => id.Value,
                 value => new UserId(value));
+
+            var passwordResetTokenIdConverter = new ValueConverter<PasswordResetTokenId, Guid>(
+                id => id.Value,
+                value => new PasswordResetTokenId(value));
 
             var savedSearchIdConverter = new ValueConverter<SavedSearchId, Guid>(
                id => id.Value,
@@ -136,8 +150,12 @@ namespace Beddin.Infrastructure.Persistence
             
                     if (property.ClrType == typeof(UserId))
                         property.SetValueConverter(userIdConverter);
+                    else if (property.ClrType == typeof(RoleId))
+                        property.SetValueConverter(roleIdConverter);
                     else if (property.ClrType == typeof(AuditLogId))
                         property.SetValueConverter(auditLogIdConverter);
+                    else if (property.ClrType == typeof(PasswordResetTokenId))
+                        property.SetValueConverter(passwordResetTokenIdConverter);
                     else if (property.ClrType == typeof(SavedSearchId))
                         property.SetValueConverter(savedSearchIdConverter);
                     else if (property.ClrType == typeof(UserSessionId))

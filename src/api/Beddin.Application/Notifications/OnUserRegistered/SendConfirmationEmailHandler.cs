@@ -5,40 +5,44 @@ using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Events;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Beddin.Application.Notifications.OnUserRegistered
 {
     public class SendConfirmationEmailHandler
-       : INotificationHandler<UserCreatedEvent>
+       : INotificationHandler<EmailConfirmationTokenGeneratedEvent>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserRepository _userRepository;
         private readonly IEmailService _emailService;
         private readonly ILogger<SendConfirmationEmailHandler> _logger;
         private readonly EmailOptions _options;
-
+        private readonly IHostEnvironment _environment;
 
         public SendConfirmationEmailHandler(
-            UserManager<ApplicationUser> userManager,
+            IUserRepository userRepository,
             IEmailService emailService,
             ILogger<SendConfirmationEmailHandler> logger,
-            IOptions<EmailOptions> options)
+            IOptions<EmailOptions> options,
+            IHostEnvironment environment)
         {
-            _userManager = userManager;
+            _userRepository = userRepository;
             _emailService = emailService;
             _logger = logger;
             _options = options.Value;
+            _environment = environment;
         }
-        public async Task Handle(UserCreatedEvent notification, CancellationToken cancellationToken)
+        public async Task Handle(EmailConfirmationTokenGeneratedEvent notification, CancellationToken cancellationToken)
         {
-            var user = await _userManager.FindByEmailAsync(notification.Email);
+            var user = await _userRepository.GetByIdAsync(notification.UserId, cancellationToken);
 
             if (user == null)
             {
@@ -46,12 +50,18 @@ namespace Beddin.Application.Notifications.OnUserRegistered
                 return;
             }
 
-            var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            // Encode token for URL safety
-            var encodedToken = WebUtility.UrlEncode(confirmationToken);
+            var encodedToken = WebUtility.UrlEncode(notification.Token);
 
             var confirmationLink = $"{_options.BaseUrl}/auth/confirm-email?email={notification.Email}&token={encodedToken}";
+
+            if (_environment.IsDevelopment())
+            {
+                _logger.LogInformation("DEV EMAIL CONFIRMATION LINK: {Link}", confirmationLink);
+
+                // Optional: also write to console directly
+                Console.WriteLine($"DEV EMAIL CONFIRMATION LINK: {confirmationLink}");
+            }
+
 
             var body = $"""
             <p>Hello {notification.FirstName},</p>

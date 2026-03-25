@@ -12,8 +12,7 @@ namespace Beddin.Application.Features.Users.Commands.Logout
     {
         public LogoutValidator()
         {
-            RuleFor(x => x.UserId)
-                .NotEmpty().WithMessage("User ID is required.");
+            RuleFor(x => x.LogoutAllSessions);
         }
     }
 }

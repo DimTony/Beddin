@@ -13,7 +13,9 @@ namespace Beddin.Application.Common.Interfaces
     {
         
         IQueryable<AuditLog> AuditLogs { get; }
-        IQueryable<User> AppUsers { get; }
+        IQueryable<User> Users { get; }
+        IQueryable<PasswordResetToken> PasswordResetTokens { get; }
+        IQueryable<Role> Roles { get; }
         IQueryable<SavedSearch> SavedSearches { get; }
         IQueryable<UserSession> UserSessions { get; }
         IQueryable<Property> Properties { get; }

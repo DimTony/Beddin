@@ -16,20 +16,11 @@ namespace Beddin.Application.Features.Users.Commands.RegisterUser
         string LastName,
         string Email,
         string Password,
-        string Role
+        Guid Role
     ) : IRequest<ApiResponse<UserDto>>,  IRequiresFeature
     {
         public string FeatureFlag => FeatureFlags.Authentication;
     }
-
-
-    public sealed record UserRegistrationPayload(
-        string FirstName,
-        string LastName,
-        string Email,
-        string Password,
-        string Role
-    );
 
     public sealed record UserDto(
         Guid Id,

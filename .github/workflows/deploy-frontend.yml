@@ -1,11 +1,15 @@
-name: Deploy
+name: Deploy Frontend
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/web/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
 
 concurrency:
-  group: deploy-production
+  group: deploy-frontend-production
   cancel-in-progress: false
 
 jobs:
@@ -14,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
-      name: production
+      name: production-frontend
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
@@ -31,13 +35,16 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: src/web/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        working-directory: src/web
 
       - name: Deploy to Vercel
         id: deploy
         run: |
+          cd src/web
           DEPLOY_URL=$(npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tail -1)
           echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
         env:
@@ -58,7 +65,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: `**Production deploy complete**\n\n${process.env.DEPLOY_URL}`,
+                body: `? **Frontend deploy complete**\n\n${process.env.DEPLOY_URL}`,
               });
             }
         env:
@@ -72,7 +79,7 @@ jobs:
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Production deploy failed — ${new Date().toISOString().slice(0,10)}`,
+              title: `? Frontend deploy failed – ${new Date().toISOString().slice(0,10)}`,
               body: `Deploy failed on commit ${context.sha}.\n\nSee run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               labels: ['type: bug', 'area: infra'],
             });

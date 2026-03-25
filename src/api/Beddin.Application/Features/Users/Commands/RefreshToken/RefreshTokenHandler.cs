@@ -1,99 +1,86 @@
-﻿using Beddin.Application.Common.Interfaces;
+﻿using Beddin.Application.Common.DTOs;
+using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace Beddin.Application.Features.Users.Commands.RefreshToken
 {
-    public sealed class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, Result<RefreshTokenResponse>>
+    public sealed class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, ApiResponse<RefreshTokenResponse>>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserRepository _userRepository;
         private readonly IUserSessionRepository _sessionRepository;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IConfiguration _configuration;
 
         public RefreshTokenHandler(
-            UserManager<ApplicationUser> userManager,
             IUserRepository userRepository,
             IUserSessionRepository sessionRepository,
             ITokenService tokenService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IConfiguration configuration)
         {
-            _userManager = userManager;
             _userRepository = userRepository;
             _sessionRepository = sessionRepository;
             _tokenService = tokenService;
             _unitOfWork = unitOfWork;
+            _configuration = configuration;
         }
 
-        public async Task<Result<RefreshTokenResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<RefreshTokenResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
-            // Find user by refresh token
-            var identityUser = _userManager.Users
-                .FirstOrDefault(u => u.RefreshToken == request.RefreshToken);
+            var user = await _userRepository.GetUserByRefreshToken(request.RefreshToken, cancellationToken);
 
-            if (identityUser == null)
+            if (user == null)
             {
-                return Result.Failure<RefreshTokenResponse>("Invalid refresh token.");
+                return ApiResponse<RefreshTokenResponse>.Fail("Invalid refresh token.");
             }
 
-            // Check if refresh token is expired in Identity
-            if (identityUser.RefreshTokenExpiry == null || identityUser.RefreshTokenExpiry < DateTime.UtcNow)
+            if (user.RefreshTokenExpiry == null || user.RefreshTokenExpiry < DateTime.UtcNow)
             {
-                return Result.Failure<RefreshTokenResponse>("Refresh token expired.");
+                return ApiResponse<RefreshTokenResponse>.Fail("Invalid refresh token.");
             }
 
-            // Check if account is active
-            if (!identityUser.IsActive)
+            if (!user.IsActive)
             {
-                return Result.Failure<RefreshTokenResponse>("Account is deactivated.");
+                return ApiResponse<RefreshTokenResponse>.Fail("Invalid refresh token.");
             }
 
-            var userId = new UserId(Guid.Parse(identityUser.Id));
 
-            // Validate session exists and is active
             var tokenHash = UserSession.ComputeHash(request.RefreshToken);
             var session = await _sessionRepository.GetByTokenHash(tokenHash, cancellationToken);
 
             if (session == null)
             {
-                return Result.Failure<RefreshTokenResponse>("Session not found.");
+                return ApiResponse<RefreshTokenResponse>.Fail("Invalid refresh token.");
             }
 
             if (!session.IsActive)
             {
-                return Result.Failure<RefreshTokenResponse>("Session has been invalidated. Please log in again.");
+                var allSessions = await _sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
+                foreach (var s in allSessions)
+                    s.Invalidate("Refresh token reuse detected");
+
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                return ApiResponse<RefreshTokenResponse>.Fail("Invalid refresh token.");
             }
 
-            // Get domain user
-            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-            if (user == null)
+            var activeSessions = await _sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
+            foreach (var activeSession in activeSessions)
             {
-                return Result.Failure<RefreshTokenResponse>("User data not found.");
+                activeSession.Invalidate("Token refreshed");
             }
 
-            // Generate new tokens
             var newRefreshToken = _tokenService.GenerateRefreshToken();
-            var newRefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            var expirationMinutes = int.TryParse(_configuration["Jwt:RefreshTokenExpiryMinutes"], out var mins) ? mins : 10080;
+            var newRefreshTokenExpiry = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
-            // Create new session (invalidate old one and create new)
-            var invalidationResult = session.Invalidate("Token refreshed");
-            if (invalidationResult.IsFailure)
-            {
-                return Result.Failure<RefreshTokenResponse>(invalidationResult.Error);
-            }
-            await _sessionRepository.Update(session, cancellationToken);
+            user.SetRefreshToken(newRefreshToken, newRefreshTokenExpiry);
 
-            // Create new session with new refresh token
             var newSession = UserSession.Create(
-                userId,
+                user.Id,
                 newRefreshToken,
                 newRefreshTokenExpiry,
                 request.IpAddress,
@@ -102,23 +89,14 @@ namespace Beddin.Application.Features.Users.Commands.RefreshToken
 
             await _sessionRepository.Add(newSession, cancellationToken);
 
-            // Generate new access token with new session ID
             var accessToken = _tokenService.GenerateAccessToken(user, newSession.Id.Value);
-            var expiresAt = _tokenService.GetTokenExpiration(accessToken);
 
-            // Update refresh token in Identity user
-            identityUser.RefreshToken = newRefreshToken;
-            identityUser.RefreshTokenExpiry = newRefreshTokenExpiry;
-            await _userManager.UpdateAsync(identityUser);
 
-            // Commit all changes
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success(new RefreshTokenResponse(
+            return ApiResponse<RefreshTokenResponse>.Ok(new RefreshTokenResponse(
                 accessToken,
-                newRefreshToken,
-                expiresAt,
-                newSession.Id.Value
+                newRefreshToken
             ));
         }
     }

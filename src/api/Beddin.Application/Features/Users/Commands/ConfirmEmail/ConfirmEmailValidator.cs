@@ -12,8 +12,9 @@ namespace Beddin.Application.Features.Users.Commands.ConfirmEmail
     {
         public ConfirmEmailValidator()
         {
-            RuleFor(x => x.UserId)
-                .NotEmpty().WithMessage("UserId is required.");
+            RuleFor(x => x.Email)
+                .NotEmpty().WithMessage("Email is required.")
+                .EmailAddress().WithMessage("Invalid email format.");
 
             RuleFor(x => x.Token)
                 .NotEmpty().WithMessage("Token is required.");

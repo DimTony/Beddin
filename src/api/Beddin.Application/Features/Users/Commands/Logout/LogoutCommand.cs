@@ -1,4 +1,5 @@
-﻿using Beddin.Domain.Common;
+﻿using Beddin.Application.Common.DTOs;
+using Beddin.Domain.Common;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -9,10 +10,8 @@ using System.Threading.Tasks;
 namespace Beddin.Application.Features.Users.Commands.Logout
 {
     public sealed record LogoutCommand(
-        string UserId,
-        Guid? SessionId = null,
         bool LogoutAllSessions = false
-    ) : IRequest<Result>;
+    ) : IRequest<ApiResponse<bool>>;
 
     public sealed record LogoutAllSessionsCommand(
         string UserId

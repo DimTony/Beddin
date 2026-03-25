@@ -7,6 +7,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddApiServices(builder.Configuration);
 
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -15,6 +16,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseApiMiddleware();
+
+// Map health check endpoint for ECS
+app.MapHealthChecks("/api/health");
+
 app.Run();
 
 public partial class Program { }

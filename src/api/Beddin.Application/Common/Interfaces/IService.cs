@@ -9,6 +9,10 @@ using System.Threading.Tasks;
 
 namespace Beddin.Application.Common.Interfaces
 {
+    public interface IRateLimitService
+    {
+        Task<bool> IsAllowedAsync(string key, int maxAttempts, int windowSeconds);
+    }
     /// <summary>
     /// Commands that implement this are automatically audit-logged.
     /// </summary>

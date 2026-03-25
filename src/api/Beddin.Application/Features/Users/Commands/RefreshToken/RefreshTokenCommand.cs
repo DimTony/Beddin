@@ -1,4 +1,5 @@
-﻿using Beddin.Domain.Common;
+﻿using Beddin.Application.Common.DTOs;
+using Beddin.Domain.Common;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -12,12 +13,10 @@ namespace Beddin.Application.Features.Users.Commands.RefreshToken
         string RefreshToken,
         string? IpAddress = null,
         string? UserAgent = null
-    ) : IRequest<Result<RefreshTokenResponse>>;
+    ) : IRequest<ApiResponse<RefreshTokenResponse>>;
 
     public sealed record RefreshTokenResponse(
         string AccessToken,
-        string RefreshToken,
-        DateTime ExpiresAt,
-        Guid SessionId
+        string RefreshToken
     );
 }

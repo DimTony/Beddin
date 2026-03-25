@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Beddin.Domain.Aggregates.Users;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,10 +17,21 @@ namespace Beddin.Domain.Common
         public static UserSessionId New() => new(Guid.NewGuid());
         public override string ToString() => Value.ToString();
     }
+    public record RoleId(Guid Value)
+    {
+        public static RoleId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+    }
 
+    
     public record UserId(Guid Value)
     {
         public static UserId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+    }
+    public record PasswordResetTokenId(Guid Value)
+    {
+        public static PasswordResetTokenId New() => new(Guid.NewGuid());
         public override string ToString() => Value.ToString();
     }
     public record PropertyId(Guid Value)

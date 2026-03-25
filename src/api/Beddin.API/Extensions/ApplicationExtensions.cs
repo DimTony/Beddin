@@ -1,8 +1,12 @@
 ﻿using Beddin.API.Middleware;
+using Beddin.Application.Common.Helpers;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Infrastructure.Persistence;
 using Beddin.Infrastructure.Persistence.Seed;
+using Hangfire;
+using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Identity;
+using StackExchange.Redis;
 
 namespace Beddin.API.Extensions
 {
@@ -20,8 +24,7 @@ namespace Beddin.API.Extensions
             {
                 var context = services.GetRequiredService<AppDbContext>();
                 var configuration = services.GetRequiredService<IConfiguration>();
-                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-                var seeder = new DatabaseSeeder(userManager, context, logger, configuration);
+                var seeder = new DatabaseSeeder(context, logger, configuration);
 
                 logger.LogInformation("Starting database seeding...");
 
@@ -57,6 +60,7 @@ namespace Beddin.API.Extensions
 
             app.UseCors(app.Environment.IsDevelopment() ? "Development" : "Production");
 
+            
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             if (!app.Environment.IsDevelopment())
@@ -64,11 +68,18 @@ namespace Beddin.API.Extensions
 
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions 
+            {
+                Authorization = app.Environment.IsDevelopment()
+                ? new[] { new LocalRequestsOnlyAuthorizationFilter() } 
+                : new IDashboardAuthorizationFilter[] { new HangfireAuthorizationFilter() }
+            });
             app.UseMiddleware<SessionValidationMiddleware>();
             app.UseMiddleware<PasswordPolicyMiddleware>();
 
             app.MapControllers();
+
+            app.UseRecurringJobs();
 
             return app;
         }

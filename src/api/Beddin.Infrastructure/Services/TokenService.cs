@@ -38,7 +38,7 @@ namespace Beddin.Infrastructure.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
                 new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
-                new Claim("role", user.Role.ToString()),
+                new Claim("role", user.RoleId.ToString()),
                 new Claim("session_id", sessionId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
@@ -102,7 +102,15 @@ namespace Beddin.Infrastructure.Services
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(token);
-            return jwtToken.ValidTo;
+
+            var expClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Exp)?.Value;
+
+            if (expClaim != null && long.TryParse(expClaim, out var exp))
+            {
+                return DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
+            }
+
+            return DateTime.MinValue;
         }
 
         public Guid? GetSessionIdFromToken(string token)

@@ -24,30 +24,38 @@ namespace Beddin.Infrastructure.Services
 
         public async Task SendAsync(string to, string subject, string body, CancellationToken ct = default)
         {
-
             if (string.IsNullOrEmpty(_options.FromEmail) || string.IsNullOrEmpty(_options.Password))
             {
+                _logger.LogWarning("Email send skipped — FromEmail or Password not configured.");
                 return;
             }
 
-            using var client = new SmtpClient(_options.SmtpServer, _options.Port)
+            try
             {
-                Credentials = new NetworkCredential(_options.Username, _options.Password),
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network
-            };
+                using var client = new SmtpClient(_options.SmtpServer, _options.Port)
+                {
+                    Credentials = new NetworkCredential(_options.Username, _options.Password),
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network
+                };
 
-            var mailMessage = new MailMessage
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_options.FromEmail, _options.FromName),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                };
+                mailMessage.To.Add(to);
+
+                await client.SendMailAsync(mailMessage, ct);
+                _logger.LogInformation("Email sent successfully to {To}", to);
+            }
+            catch (Exception ex)
             {
-                From = new MailAddress(_options.FromEmail, _options.FromName),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
-
-            mailMessage.To.Add(to);
-
-            await client.SendMailAsync(mailMessage);
+                _logger.LogError(ex, "Failed to send email to {To} with subject '{Subject}'", to, subject);
+                throw;
+            }
         }
 
         public Task SendEmailConfirmationAsync(string email, string confirmationLink)

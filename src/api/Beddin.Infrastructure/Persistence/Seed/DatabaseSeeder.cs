@@ -3,6 +3,7 @@ using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Beddin.Infrastructure.Persistence.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,13 +20,12 @@ namespace Beddin.Infrastructure.Persistence.Seed
 {
     public class DatabaseSeeder
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly AppDbContext _context;
         private readonly ILogger<DatabaseSeeder> _logger;
         private readonly IConfiguration _configuration;
-        public DatabaseSeeder(UserManager<ApplicationUser> userManager, AppDbContext context, ILogger<DatabaseSeeder> logger, IConfiguration configuration)
+        public DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder> logger, IConfiguration configuration)
         {
-            _userManager = userManager;
+            //_userManager = userManager;
             _context = context;
             _logger = logger;
             _configuration = configuration;
@@ -56,11 +56,76 @@ namespace Beddin.Infrastructure.Persistence.Seed
                 throw;
             }
         }
+        //private async Task SeedUsersAsync()
+        //{
+        //    var usersToSeed = new[]
+        //    {
+        //        new
+        //        {
+        //            Email = _configuration.GetValue<string>("MockUsers:Admin:Email") ?? "",
+        //            FirstName = "System",
+        //            LastName = "Administrator",
+        //            Role = "Admin",
+        //            Password = _configuration.GetValue<string>("MockUsers:Admin:Password") ?? ""
+        //        },
+        //        new
+        //        {
+        //            Email = _configuration.GetValue<string>("MockUsers:Owner:Email") ?? "",
+        //            FirstName = "Store",
+        //            LastName = "Owner",
+        //            Role = "Owner",
+        //            Password = _configuration.GetValue<string>("MockUsers:Owner:Password") ?? ""
+        //        },
+        //        new
+        //        {
+        //            Email = _configuration.GetValue<string>("MockUsers:Buyer:Email") ?? "",
+        //            FirstName = "Test",
+        //            LastName = "Buyer",
+        //            Role = "Buyer",
+        //            Password = _configuration.GetValue<string>("MockUsers:Buyer:Password") ?? ""
+        //        }
+        //    };
+
+        //    foreach (var userData in usersToSeed)
+        //    {
+        //        if (string.IsNullOrWhiteSpace(userData.Email))
+        //            continue;
+
+        //        var exists = await _context.Users
+        //            .AnyAsync(u => u.Email == userData.Email);
+
+        //        if (exists)
+        //        {
+        //            _logger.LogInformation("User with email {Email} already exists, skipping", userData.Email);
+        //            continue;
+        //        }
+
+        //        _logger.LogInformation("Seeding user {Email} with role {Role}", userData.Email, userData.Role);
+
+        //        var user = User.Create(
+        //            userData.FirstName,
+        //            userData.LastName,
+        //            userData.Role,
+        //            userData.Password,
+        //            userData.Email
+        //        );
+
+        //        _context.Users.Add(user);
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //}
 
         private async Task SeedAdminUserAsync()
         {
-            var adminEmail = _configuration.GetValue<string>("DatabaseSeeding:AdminUser:Email")
-                ?? "admin@beddin.com";
+            var adminEmail = _configuration.GetValue<string>("MockUsers:Admin:Email")
+                ?? "";
+            var ownerEmail = _configuration.GetValue<string>("MockUsers:Owner:Email")
+                ?? "";
+            var buyerEmail = _configuration.GetValue<string>("MockUsers:Buyer:Email")
+                ?? "";
+
+
 
             // Check if admin user already exists
             var adminExists = await _context.Users
@@ -83,41 +148,54 @@ namespace Beddin.Infrastructure.Persistence.Seed
             var password = _configuration.GetValue<string>("DatabaseSeeding:AdminUser:Password")
                 ?? "Admin123!";
 
-            var adminUser = User.Create(
-                firstName: firstName,
-                lastName: lastName,
-                role: UserRole.Admin,
-                email: adminEmail
-            );
+            return;
 
-            var identityUser = new ApplicationUser
-            {
-                Id = adminUser.Id.Value.ToString(),
-                UserName = adminUser.Email,
-                Email = adminUser.Email,
-                EmailConfirmed = false,
-                FailedLoginAttempts = 0
-            };
+            //var identityUser = new ApplicationUser
+            //{
+            //    UserName = adminEmail,
+            //    Email = adminEmail,
+            //    EmailConfirmed = false,
+            //    FailedLoginAttempts = 0
+            //};
 
-            var identityResult = await _userManager.CreateAsync(identityUser, password);
-            if (!identityResult.Succeeded)
-            {
-                var errors = string.Join(", ", identityResult.Errors.Select(e => e.Description));
-                _logger.LogError("Failed to create admin user: {Errors}", errors);
-                return;
-            }
+            //var adminUser = User.Create(
+            //    identityUser.Id,
+            //    firstName: firstName,
+            //    lastName: lastName,
+            //    role: UserRole.Admin,
+            //    email: adminEmail
+            //);
 
-            // Add role claim
-            await _userManager.AddClaimAsync(identityUser, new System.Security.Claims.Claim("role", UserRole.Admin.ToString()));
+            //var identityResult = await _userManager.CreateAsync(identityUser, password);
+            //if (!identityResult.Succeeded)
+            //{
+            //    var errors = string.Join(", ", identityResult.Errors.Select(e => e.Description));
+            //    _logger.LogError("Failed to create admin user: {Errors}", errors);
+            //    return;
+            //}
 
-            // Save domain user
-            _context.AppUsers.Add(adminUser);
-            await _context.SaveChangesAsync();
+            //try
+            //{
+            //    await _userManager.AddClaimAsync(identityUser,
+            //        new System.Security.Claims.Claim("role", UserRole.Admin.ToString()));
 
-            _logger.LogInformation(
-                "Admin user created successfully with ID: {UserId} and Email: {Email}",
-                adminUser.Id.Value,
-                adminUser.Email);
+            //    _context.AppUsers.Add(adminUser);
+            //    await _context.SaveChangesAsync();
+
+            //    //await _userRepository.AddAsync(user, cancellationToken);
+            //    //await _unitOfWork.SaveChangesAsync(cancellationToken);
+            //}
+            //catch (Exception)
+            //{
+            //    // Compensate — delete the identity user so we don't leave orphans
+            //    await _userManager.DeleteAsync(identityUser);
+            //    throw;  // let the exception bubble — caller gets a 500, not a silent split
+            //}
+
+            //_logger.LogInformation(
+            //    "Admin user created successfully with ID: {UserId} and Email: {Email}",
+            //    adminUser.Id.Value,
+            //    adminUser.Email);
         }
 
         ///// <summary>

@@ -8,6 +8,7 @@ namespace Beddin.Application.Features.Users.Queries.GetActiveSessions
 {
     public sealed record SessionDto(
         Guid SessionId,
+        Guid UserId,
         string? IpAddress,
         string? UserAgent,
         DateTime CreatedAt,

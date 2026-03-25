@@ -1,4 +1,7 @@
-﻿using Beddin.Domain.Common;
+﻿using Beddin.Application.Common.DTOs;
+using Beddin.Application.Common.Helpers;
+using Beddin.Application.Common.Interfaces;
+using Beddin.Domain.Common;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -10,15 +13,18 @@ namespace Beddin.Application.Features.Users.Commands.Login
 {
     public sealed record LoginCommand(
         string Email,
-        string Password,
-        string? IpAddress = null,
-        string? UserAgent = null
-    ) : IRequest<Result<LoginResponse>>;
+        string Password
+    ) : ApiRequest, IRequest<ApiResponse<LoginResponse>>, IRequiresFeature
+    {
+        public string FeatureFlag => FeatureFlags.Authentication;
+
+        //public string RateLimitKey => $"login:{Email}";
+        //public int MaxAttempts => 5;
+        //public int WindowSeconds => 60;
+    }
 
     public sealed record LoginResponse(
         string AccessToken,
-        string RefreshToken,
-        DateTime ExpiresAt,
-        Guid SessionId
+        string RefreshToken
     );
 }

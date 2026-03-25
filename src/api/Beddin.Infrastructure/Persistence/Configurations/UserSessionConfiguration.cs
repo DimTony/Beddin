@@ -19,13 +19,8 @@ namespace Beddin.Infrastructure.Persistence.Configurations
                .HasConversion(id => id!.Value, value => new UserId(value))
                .IsRequired();
 
-            //// Token (⚠️ consider removing this from persistence)
-            //builder.Property(x => x.Token)
-            //    .HasMaxLength(2048) // JWTs can be long
-            //    .IsRequired();
-
             builder.Property(x => x.TokenHash)
-                .HasMaxLength(128) // SHA256 hex = 64 bytes → 128 hex chars
+                .HasMaxLength(128)
                 .IsRequired();
 
             builder.Property(x => x.IpAddress)
@@ -65,6 +60,11 @@ namespace Beddin.Infrastructure.Persistence.Configurations
             // Optional: concurrency control
             builder.Property(x => x.ExpiresAt)
                 .IsConcurrencyToken();
+
+            builder.HasIndex(u => u.UserId)
+                .HasDatabaseName("UX_User_ActiveSession")
+                .IsUnique()
+                .HasFilter("\"InvalidatedAt\" IS NULL");
 
             builder.Ignore(p => p.DomainEvents);
 

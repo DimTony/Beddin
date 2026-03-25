@@ -26,10 +26,12 @@ namespace Beddin.API.Extensions
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AuditLogBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(DomainEventBehavior<,>));
+                //cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RateLimitingBehaviour<,>));
             });
 
             services.AddValidatorsFromAssembly(
                 typeof(AssemblyMarker).Assembly);
+
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -39,7 +41,7 @@ namespace Beddin.API.Extensions
 
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]!)),
+                        Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]!)),
                     ValidateIssuer = true,
                     ValidIssuer = configuration["Jwt:Issuer"],
                     ValidateAudience = true,

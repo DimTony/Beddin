@@ -1,4 +1,7 @@
-﻿using Beddin.Domain.Common;
+﻿using Beddin.Application.Common.DTOs;
+using Beddin.Application.Common.Helpers;
+using Beddin.Application.Common.Interfaces;
+using Beddin.Domain.Common;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -9,7 +12,12 @@ using System.Threading.Tasks;
 namespace Beddin.Application.Features.Users.Commands.ConfirmEmail
 {
     public sealed record ConfirmEmailCommand(
-      string UserId,
-      string Token
-    ) : IRequest<Result>;
+      string Email,
+      string Token,
+      string? IpAddress = null,
+      string? UserAgent = null
+    ) : IRequest<ApiResponse<bool>>, IRequiresFeature
+    {
+        public string FeatureFlag => FeatureFlags.Authentication;
+    }
 }

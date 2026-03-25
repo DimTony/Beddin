@@ -1,4 +1,5 @@
-﻿using Beddin.Application.Common.Interfaces;
+﻿using Beddin.Application.Common.DTOs;
+using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using MediatR;
@@ -11,116 +12,73 @@ using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Users.Commands.Logout
 {
-    public sealed class LogoutHandler : IRequestHandler<LogoutCommand, Result>
+    public sealed class LogoutHandler : IRequestHandler<LogoutCommand, ApiResponse<bool>>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserSessionRepository _sessionRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly ICurrentUserService _currentUser;
         private readonly IUnitOfWork _unitOfWork;
 
         public LogoutHandler(
-            UserManager<ApplicationUser> userManager,
             IUserSessionRepository sessionRepository,
+            IUserRepository userRepository,
+            ICurrentUserService currentUser,
             IUnitOfWork unitOfWork)
         {
-            _userManager = userManager;
             _sessionRepository = sessionRepository;
+            _userRepository = userRepository;
+            _currentUser = currentUser;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Result> Handle(LogoutCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<bool>> Handle(LogoutCommand request, CancellationToken cancellationToken)
         {
-            var identityUser = await _userManager.FindByIdAsync(request.UserId);
-            if (identityUser == null)
+            var userId = _currentUser.UserId;
+
+            if (!userId.HasValue)
+                return ApiResponse<bool>.Fail("User not found.");
+
+            var user = await _userRepository.GetByIdAsync(new UserId(userId.Value), cancellationToken);
+
+            if (user == null)
             {
-                return Result.Failure("User not found.");
+                return ApiResponse<bool>.Fail("User not found.");
             }
 
-            var userId = new UserId(Guid.Parse(request.UserId));
+            var sessionId = _currentUser.SessionId;
 
-            if (request.LogoutAllSessions)
+            if (request.LogoutAllSessions || !sessionId.HasValue)
             {
-                // Invalidate all active sessions for the user
-                await _sessionRepository.InvalidateAll(userId, "User logged out from all devices", cancellationToken);
+                var sessions = await _sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
+                foreach (var session in sessions)
+                    session.Invalidate(request.LogoutAllSessions ? "Logout all sessions" : "Logout misuse detected");
             }
-            else if (request.SessionId.HasValue)
+            else if (sessionId.HasValue)
             {
-                // Invalidate specific session
-                var session = await _sessionRepository.GetById(request.SessionId.Value, cancellationToken);
+                var session = await _sessionRepository.GetById(sessionId.Value, cancellationToken);
+
                 if (session != null)
                 {
-                    var invalidationResult = session.Invalidate("User logged out");
-                    if (invalidationResult.IsFailure)
-                    {
-                        return Result.Failure(invalidationResult.Error);
-                    }
+                    session.Invalidate("User logged out");
                     await _sessionRepository.Update(session, cancellationToken);
+
                 }
             }
             else
             {
-                // Invalidate the most recent active session
-                var activeSession = await _sessionRepository.GetActiveSession(userId, cancellationToken);
+
+                var activeSession = await _sessionRepository.GetActiveSession(new UserId(userId.Value), cancellationToken);
                 if (activeSession != null)
                 {
-                    var invalidationResult = activeSession.Invalidate("User logged out");
-                    if (invalidationResult.IsFailure)
-                    {
-                        return Result.Failure(invalidationResult.Error);
-                    }
+                    activeSession.Invalidate("User logged out");
                     await _sessionRepository.Update(activeSession, cancellationToken);
                 }
+
             }
 
-            // Revoke refresh token from Identity user
-            identityUser.RefreshToken = null;
-            identityUser.RefreshTokenExpiry = null;
-            await _userManager.UpdateAsync(identityUser);
-
-            // Commit all changes
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success();
-        }
-    }
-
-    public sealed class LogoutAllSessionsHandler : IRequestHandler<LogoutAllSessionsCommand, Result>
-    {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserSessionRepository _sessionRepository;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public LogoutAllSessionsHandler(
-            UserManager<ApplicationUser> userManager,
-            IUserSessionRepository sessionRepository,
-            IUnitOfWork unitOfWork)
-        {
-            _userManager = userManager;
-            _sessionRepository = sessionRepository;
-            _unitOfWork = unitOfWork;
-        }
-
-        public async Task<Result> Handle(LogoutAllSessionsCommand request, CancellationToken cancellationToken)
-        {
-            var identityUser = await _userManager.FindByIdAsync(request.UserId);
-            if (identityUser == null)
-            {
-                return Result.Failure("User not found.");
-            }
-
-            var userId = new UserId(Guid.Parse(request.UserId));
-
-            // Invalidate all active sessions
-            await _sessionRepository.InvalidateAll(userId, "User logged out from all devices", cancellationToken);
-
-            // Revoke refresh token from Identity user
-            identityUser.RefreshToken = null;
-            identityUser.RefreshTokenExpiry = null;
-            await _userManager.UpdateAsync(identityUser);
-
-            // Commit all changes
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            return Result.Success();
+            return ApiResponse<bool>.Ok(true, "User is logged out.");
         }
     }
 }

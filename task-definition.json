@@ -1,0 +1,65 @@
+{
+  "family": "beddin-api-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [ "FARGATE" ],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::012834916544:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::012834916544:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "beddin-api",
+      "image": "beddin-api/beddin-api:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "ASPNETCORE_ENVIRONMENT",
+          "value": "Production"
+        },
+        {
+          "name": "ASPNETCORE_URLS",
+          "value": "http://+:8080"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "ConnectionStrings__DefaultConnection",
+          "valueFrom": "arn:aws:secretsmanager:eu-north-1:012834916544:secret:beddin/db-connection"
+        },
+        {
+          "name": "ConnectionStrings__Redis",
+          "valueFrom": "arn:aws:secretsmanager:eu-north-1:012834916544:secret:beddin/redis-connection"
+        },
+        {
+          "name": "Jwt__SecretKey",
+          "valueFrom": "arn:aws:secretsmanager:eu-north-1:012834916544:secret:beddin/jwt-secret"
+        },
+        {
+          "name": "EmailOptions__Password",
+          "valueFrom": "arn:aws:secretsmanager:eu-north-1:012834916544:secret:beddin/email-password"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/beddin-api",
+          "awslogs-region": "eu-north-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [ "CMD-SHELL", "curl -f http://localhost:8080/api/health || exit 1" ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
