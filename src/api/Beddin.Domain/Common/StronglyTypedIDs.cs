@@ -1,20 +1,37 @@
-﻿using System;
+﻿using Beddin.Domain.Aggregates.Users;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Beddin.Domain.Common
-{
+{    
+    public record AuditLogId(Guid Value)
+    {
+        public static AuditLogId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+    }
     public record UserSessionId(Guid Value)
     {
         public static UserSessionId New() => new(Guid.NewGuid());
         public override string ToString() => Value.ToString();
     }
+    public record RoleId(Guid Value)
+    {
+        public static RoleId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+    }
 
+    
     public record UserId(Guid Value)
     {
         public static UserId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+    }
+    public record PasswordResetTokenId(Guid Value)
+    {
+        public static PasswordResetTokenId New() => new(Guid.NewGuid());
         public override string ToString() => Value.ToString();
     }
     public record PropertyId(Guid Value)

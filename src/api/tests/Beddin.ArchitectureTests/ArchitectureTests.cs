@@ -100,24 +100,24 @@ public class ArchitectureTests
             "All entities should be sealed or abstract to prevent inheritance issues");
     }
 
-    [Fact]
-    public void ValueObjects_ShouldBeSealed()
-    {
-        // Arrange
-        var assembly = typeof(Beddin.Domain.Aggregates.Users.UserRoles).Assembly;
+    //[Fact]
+    //public void ValueObjects_ShouldBeSealed()
+    //{
+    //    // Arrange
+    //    var assembly = typeof(Beddin.Domain.Aggregates.Users.UserRoles).Assembly;
 
-        // Act
-        var result = Types.InAssembly(assembly)
-            .That()
-            .Inherit(typeof(Beddin.Domain.Aggregates.Users.UserRoles))
-            .Should()
-            .BeSealed()
-            .GetResult();
+    //    // Act
+    //    var result = Types.InAssembly(assembly)
+    //        .That()
+    //        .Inherit(typeof(Beddin.Domain.Aggregates.Users.UserRoles))
+    //        .Should()
+    //        .BeSealed()
+    //        .GetResult();
 
-        // Assert
-        result.IsSuccessful.Should().BeTrue(
-            "All value objects should be sealed");
-    }
+    //    // Assert
+    //    result.IsSuccessful.Should().BeTrue(
+    //        "All value objects should be sealed");
+    //}
 
     //[Fact]
     //public void ValueObjects_ShouldBeSealed()

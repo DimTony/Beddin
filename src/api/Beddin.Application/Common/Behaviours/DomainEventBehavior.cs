@@ -26,14 +26,10 @@ namespace Beddin.Application.Common.Behaviours
             RequestHandlerDelegate<TResponse> next,
             CancellationToken ct)
         {
-            // Step 1: Run the handler — aggregates mutate but nothing is saved yet
             var response = await next();
 
-            // Step 2: Commit the primary aggregate state
             await _uow.SaveChangesAsync(ct);
 
-            // Steps 3-6: Dispatch events and save side-effects, up to 5 rounds
-            // (prevents infinite loops from event chains while supporting 2-level chains)
             const int maxRounds = 5;
             for (int round = 0; round < maxRounds; round++)
             {
@@ -43,7 +39,6 @@ namespace Beddin.Application.Common.Behaviours
                 foreach (var domainEvent in events)
                     await _mediator.Publish(domainEvent, ct);
 
-                // Persist anything the notification handlers added (e.g. SavingsAccount)
                 await _uow.SaveChangesAsync(ct);
             }
 

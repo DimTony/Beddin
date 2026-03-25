@@ -7,12 +7,72 @@ using System.Threading.Tasks;
 
 namespace Beddin.Domain.Events
 {
+
+    
+        public record AuditLogRecordedEvent(
+      AuditLogId AuditLogId,
+      string Action,
+      string Resource,
+      Guid? ResourceId,
+      string? OldValue,
+      string? NewValue,
+      string? IpAddress) : DomainEvent;
+    public record AuditLogUpdatedEvent(
+      AuditLogId AuditLogId,
+      string Action,
+      string Resource,
+      Guid? ResourceId,
+      string? OldValue,
+      string? NewValue,
+      string? IpAddress) : DomainEvent;
+    public record RoleCreatedEvent(
+      RoleId RoleId,
+      string Name,
+      string Description) : DomainEvent;
+
     public record UserCreatedEvent(
       UserId UserId,
       string FirstName,
       string LastName,
       string Email,
-      string Role) : DomainEvent;
+      RoleId Role) : DomainEvent;
+
+    public record PasswordChangedEvent(
+      UserId UserId,
+      string FirstName,
+      string LastName,
+      string Email) : DomainEvent;
+
+    public record PasswordResetTokenCreatedEvent(
+        UserId UserId,
+        string Token,
+        DateTime ExpiresAt) : DomainEvent;
+
+    public record PasswordResetTokenUsedEvent(
+        PasswordResetTokenId Id,
+        UserId UserId,
+        DateTime UsedAt) : DomainEvent;
+
+    public record PasswordResetTokenRevokedEvent(
+       PasswordResetTokenId Id,
+       UserId UserId,
+       DateTime RevokedAt) : DomainEvent;
+
+    
+
+
+    public record EmailConfirmationTokenGeneratedEvent(
+    UserId UserId,
+    string FirstName,
+    string LastName,
+    string Email,
+    string Token) : DomainEvent;
+
+    public record EmailConfirmedEvent(
+        UserId UserId,
+        string FirstName,
+        string LastName,
+        string Email) : DomainEvent;
 
     public record EmailUpdatedEvent(
      UserId UserId,
@@ -25,7 +85,7 @@ namespace Beddin.Domain.Events
       string FirstName,
       string LastName,
       string Email,
-     string NewRole) : DomainEvent;
+     RoleId NewRole) : DomainEvent;
 
     public record UserDeactivatedEvent(
      UserId UserId,
@@ -33,7 +93,15 @@ namespace Beddin.Domain.Events
       string LastName,
       string Email) : DomainEvent;
 
+    public record UserActivatedEvent(
+     UserId UserId,
+      string FirstName,
+      string LastName,
+      string Email) : DomainEvent;
+
+
     
+
     public record PropertyCreatedEvent(
       PropertyId PropertyId,
       string Title,

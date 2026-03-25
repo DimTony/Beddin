@@ -33,7 +33,7 @@ namespace Beddin.Application.Features.Users.Queries.GetUserById
                 user.FirstName,
                 user.LastName,
                 user.Email,
-                user.Role.ToString(),
+                user.RoleId.ToString(),
                 user.IsActive,
                 user.CreatedAt
             );

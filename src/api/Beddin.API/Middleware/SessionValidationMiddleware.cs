@@ -9,9 +9,10 @@ namespace Beddin.API.Middleware
         // These paths skip session validation
         private static readonly string[] ExcludedPaths =
         [
-            "/api/auth/login",
-        "/swagger",
-        "/health"
+            "/Authentication/Login'",
+            "/swagger",
+            "/health",
+            "/hangfire"
         ];
 
         public SessionValidationMiddleware(RequestDelegate next) => _next = next;
@@ -43,7 +44,7 @@ namespace Beddin.API.Middleware
             }
 
             // Validate session is still active in DB
-            var session = await sessionRepo.GetByIdAsync(sessionId);
+            var session = await sessionRepo.GetById(sessionId);
             if (session is null || !session.IsActive)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;

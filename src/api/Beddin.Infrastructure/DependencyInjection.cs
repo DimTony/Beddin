@@ -1,12 +1,22 @@
 ﻿using Beddin.Application.Common.Interfaces;
+using Beddin.Application.Common.Options;
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Infrastructure.Persistence;
+using Beddin.Infrastructure.Persistence.BackgroundJobs;
 using Beddin.Infrastructure.Persistence.Repositories;
+using Beddin.Infrastructure.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using StackExchange.Redis;
+using HealthChecks.NpgSql;
+using HealthChecks.Redis; // Add this using directive
 
 namespace Beddin.Infrastructure
 {
@@ -19,7 +29,7 @@ namespace Beddin.Infrastructure
             services
                 .AddDatabase(configuration)
                 .AddRepositories()
-                //.AddServices()
+                .AddServices()
                 .AddObservability(configuration);
 
             return services;
@@ -44,21 +54,62 @@ namespace Beddin.Infrastructure
                 )
             );
 
-            // AppDbContext now implements IUnitOfWork
-            services.AddScoped<IUnitOfWork>(provider =>
+            services.AddScoped<IReadDbContext>(provider =>
                 provider.GetRequiredService<AppDbContext>());
 
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+
             services.AddScoped<IDomainEventCollector, EfDomainEventCollector>();
+
+            services.Configure<EmailOptions>(
+                configuration.GetSection(EmailOptions.SectionName));
+
+            services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(options =>
+                    options.UseNpgsqlConnection(
+                        configuration.GetConnectionString("DefaultConnection"))));
+
+            services.AddHangfireServer();
+
+            services.AddHealthChecks()
+                .AddNpgSql(configuration.GetConnectionString("DefaultConnection")!)
+                .AddRedis(configuration.GetConnectionString("Redis")!);
 
             return services;
         }
         public static IServiceCollection AddRepositories(this IServiceCollection services)
         {
             services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
-            // Add concrete repositories (e.g. IPropertyRepository -> PropertyRepository) as you implement them:
+            services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IResetPasswordRepository, ResetPasswordRepository>();
             services.AddScoped<IUserSessionRepository, UserSessionRepository>();
             services.AddScoped<IPropertyRepository, PropertyRepository>();
+            return services;
+        }
+
+        private static IServiceCollection AddServices(
+            this IServiceCollection services)
+        {
+            services.AddHttpContextAccessor();
+
+            //services.AddSingleton<IRateLimitService, RedisRateLimitService>();
+
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IAuditLogService, AuditLogService>();
+
+
+            // Auth Services
+            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<IEmailService, EmailService>();
+
+            // Jobs
+            services.AddScoped<SessionCleanupJob>();
+
             return services;
         }
         public static IServiceCollection AddObservability(
