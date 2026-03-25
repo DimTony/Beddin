@@ -28,7 +28,7 @@
       "secrets": [
         {
           "name": "Jwt__ExpirationMinutes",
-          "valueFrom": "20"
+          "valueFrom": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/Jwt__ExpirationMinutes"
         },
         {
           "name": "ConnectionStrings__DefaultConnection",
@@ -36,11 +36,11 @@
         },
         {
           "name": "Jwt__Issuer",
-          "valueFrom": "Beddin"
+          "valueFrom": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/Jwt__Issuer"
         },
         {
           "name": "Jwt__RefreshTokenExpiryMinutes",
-          "valueFrom": "10080"
+          "valueFrom": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/Jwt__RefreshTokenExpiryMinutes"
         },
         {
           "name": "Jwt__SecretKey",
@@ -48,7 +48,7 @@
         },
         {
           "name": "Jwt__Audience",
-          "valueFrom": "BeddinUsers"
+          "valueFrom": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/Jwt__Audience"
         }
       ],
       "environmentFiles": [],
