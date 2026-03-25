@@ -6,12 +6,37 @@ using Beddin.Infrastructure.Persistence.Seed;
 using Hangfire;
 using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
 namespace Beddin.API.Extensions
 {
     public static class ApplicationExtensions
     {
+        public static async Task<IApplicationBuilder> ApplyMigrationsAsync(
+            this IApplicationBuilder app)
+        {
+            using var scope = app.ApplicationServices.CreateScope();
+            var services = scope.ServiceProvider;
+            var db = services.GetRequiredService<AppDbContext>();
+            var logger = services.GetRequiredService<ILogger<AppDbContext>>();
+
+            try
+            {
+                logger.LogInformation("Applying database migrations...");
+           
+                await db.Database.MigrateAsync();
+
+                logger.LogInformation("Database migrations applied");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while applying migrations to the database");
+                throw;
+            }
+
+            return app;
+        }
         public static async Task<IApplicationBuilder> SeedDatabaseAsync(
             this IApplicationBuilder app,
             bool seedSampleData = false)
