@@ -1,0 +1,51 @@
+name: PR title lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  lint-title:
+    name: Enforce Conventional Commits format
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check PR title
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+
+            // Conventional Commits pattern
+            // type(optional-scope): description
+            const pattern = /^(feat|fix|chore|refactor|test|docs|ci|perf|style|build|revert)(\(.+\))?: .{1,72}$/;
+
+            if (!pattern.test(title)) {
+              core.setFailed(`
+            PR title does not follow Conventional Commits format.
+
+            Current title: "${title}"
+
+            Expected format: type(scope): description
+
+            Valid types:
+              feat     — new feature
+              fix      — bug fix
+              chore    — deps, tooling, config
+              refactor — code change without behaviour change
+              test     — adding or updating tests
+              docs     — documentation only
+              ci       — CI/CD changes
+              perf     — performance improvement
+              style    — formatting, whitespace
+
+            Examples:
+              feat(search): add filter panel with price range
+              fix(map): correct pin offset on mobile Safari
+              chore: bump next.js to 14.2.3
+              ci: add Lighthouse CI step to deploy workflow
+              `);
+            } else {
+              console.log(`PR title is valid: "${title}"`);
+            }

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: beddin-postgres
+    environment:
+      POSTGRES_DB: beddin
+      POSTGRES_USER: beddin_user
+      POSTGRES_PASSWORD: beddin_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beddin_user -d beddin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - beddin-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: beddin-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - beddin-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  beddin-network:
+    driver: bridge

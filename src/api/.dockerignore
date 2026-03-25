@@ -1,0 +1,133 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.vscode/
+.vs/
+
+# Documentation
+*.md
+README.md
+LICENSE
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+**/TestResults/
+		
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Test projects
+**/tests/**
+**/*Tests/
+**/*.Tests/
+**/*.Test/
+**/test/
+*.Test.csproj
+*.Tests.csproj
+*.IntegrationTests.csproj
+*.UnitTests.csproj
+*.ArchitectureTests.csproj
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+*.rsuser
+*.sln.iml
+*.vsp
+*.vspx
+*.sap
+*.cache
+*.ilk
+*.log
+*.tlog
+*.pdb
+*.iobj
+*.ipdb
+*.idb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/Properties/launchSettings.json
+
+# Web
+**/node_modules/
+**/wwwroot/dist/
+**/wwwroot/lib/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Frontend
+src/web/
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# IDE
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Environment files (security)
+**/.env
+**/.env.*
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
