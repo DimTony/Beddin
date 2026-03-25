@@ -32,7 +32,7 @@
         },
         {
           "name": "ConnectionStrings__DefaultConnection",
-          "value": "arn:aws:iam::012834916544:parameter/beddin/production/ConnectionStrings__DefaultConnection"
+          "valueFrom": "arn:aws:iam::012834916544:parameter/beddin/production/ConnectionStrings__DefaultConnection"
         },
         {
           "name": "Jwt__Issuer",
@@ -44,7 +44,7 @@
         },
         {
           "name": "Jwt__SecretKey",
-          "value": "arn:aws:iam::012834916544:parameter/beddin/production/Jwt__SecretKey"
+          "valueFrom": "arn:aws:iam::012834916544:parameter/beddin/production/Jwt__SecretKey"
         },
         {
           "name": "Jwt__Audience",
