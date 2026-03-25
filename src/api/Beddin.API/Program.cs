@@ -20,6 +20,8 @@ app.UseApiMiddleware();
 // Map health check endpoint for ECS
 app.MapHealthChecks("/api/health");
 
+await app.ApplyMigrationsAsync();
+
 app.Run();
 
 public partial class Program { }
