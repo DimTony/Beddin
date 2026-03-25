@@ -1,19 +1,17 @@
 {
-  "family": "beddin-api-task",
-  "networkMode": "awsvpc",
-  "requiresCompatibilities": [ "FARGATE" ],
-  "cpu": "512",
-  "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::012834916544:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::012834916544:role/ecsTaskRole",
+  "taskDefinitionArn": "arn:aws:ecs:eu-north-1:012834916544:task-definition/beddin-api-task:1",
   "containerDefinitions": [
     {
       "name": "beddin-api",
-      "image": "beddin-api/beddin-api:latest",
+      "image": "012834916544.dkr.ecr.eu-north-1.amazonaws.com/beddin-api:latest",
+      "cpu": 0,
       "portMappings": [
         {
+          "name": "beddin-api-8080-tcp",
           "containerPort": 8080,
-          "protocol": "tcp"
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "appProtocol": "http"
         }
       ],
       "essential": true,
@@ -29,37 +27,96 @@
       ],
       "secrets": [
         {
-          "name": "ConnectionStrings__DefaultConnection",
-          "valueFrom": "arn:aws:secretsmanager:eu-north-1:012834916544:secret:beddin/db-connection"
+          "name": "Jwt__ExpirationMinutes",
+          "value": "20"
         },
         {
-          "name": "ConnectionStrings__Redis",
-          "valueFrom": "arn:aws:secretsmanager:eu-north-1:012834916544:secret:beddin/redis-connection"
+          "name": "ConnectionStrings__DefaultConnection",
+          "value": "arn:aws:iam::012834916544:parameter/beddin/production/ConnectionStrings__DefaultConnection"
+        },
+        {
+          "name": "Jwt__Issuer",
+          "value": "Beddin"
+        },
+        {
+          "name": "Jwt__RefreshTokenExpiryMinutes",
+          "value": "10080"
         },
         {
           "name": "Jwt__SecretKey",
-          "valueFrom": "arn:aws:secretsmanager:eu-north-1:012834916544:secret:beddin/jwt-secret"
+          "value": "arn:aws:iam::012834916544:parameter/beddin/production/Jwt__SecretKey"
         },
         {
-          "name": "EmailOptions__Password",
-          "valueFrom": "arn:aws:secretsmanager:eu-north-1:012834916544:secret:beddin/email-password"
+          "name": "Jwt__Audience",
+          "value": "BeddinUsers"
         }
       ],
+      "environmentFiles": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "ulimits": [],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/beddin-api",
+          "awslogs-group": "/ecs/beddin-api-task",
+          "awslogs-create-group": "true",
           "awslogs-region": "eu-north-1",
           "awslogs-stream-prefix": "ecs"
-        }
+        },
+        "secretOptions": []
       },
-      "healthCheck": {
-        "command": [ "CMD-SHELL", "curl -f http://localhost:8080/api/health || exit 1" ],
-        "interval": 30,
-        "timeout": 10,
-        "retries": 3,
-        "startPeriod": 60
-      }
+      "systemControls": []
     }
-  ]
+  ],
+  "family": "beddin-api-task",
+  "executionRoleArn": "arn:aws:iam::012834916544:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "revision": 1,
+  "volumes": [],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+    {
+      "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+    },
+    {
+      "name": "ecs.capability.execution-role-awslogs"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.ecr-auth"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+    },
+    {
+      "name": "ecs.capability.execution-role-ecr-pull"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    },
+    {
+      "name": "ecs.capability.task-eni"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+    }
+  ],
+  "placementConstraints": [],
+  "compatibilities": [
+    "EC2",
+    "MANAGED_INSTANCES",
+    "FARGATE"
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "1024",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "registeredAt": "2026-03-25T17:16:31.482Z",
+  "registeredBy": "arn:aws:iam::012834916544:root",
+  "enableFaultInjection": false,
+  "tags": []
 }
