@@ -10,6 +10,8 @@ builder.Services.AddApiServices(builder.Configuration);
 
 var app = builder.Build();
 
+await app.ApplyMigrationsAsync();
+
 if (app.Environment.IsDevelopment())
 {
     await app.SeedDatabaseAsync(seedSampleData: true);

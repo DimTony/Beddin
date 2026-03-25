@@ -28,7 +28,9 @@ namespace Beddin.Domain.Aggregates.Users
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
 
+#pragma warning disable CS0649
         private Role? _role;
+#pragma warning restore CS0649
         public Role Role => _role!;
 
         private readonly List<Property> _listings = new();
