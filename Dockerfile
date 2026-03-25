@@ -17,7 +17,7 @@ COPY src/api/ src/api/
 
 # Build
 WORKDIR "/src/src/api/Beddin.API"
-RUN dotnet build "Beddin.API.csproj" -c $BUILD_CONFIGURATION -o /app/build --no-restore
+RUN dotnet build "Beddin.API.csproj" -c $BUILD_CONFIGURATION --no-restore
 
 # Publish Stage
 FROM build AS publish
