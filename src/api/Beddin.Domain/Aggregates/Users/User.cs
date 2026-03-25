@@ -252,8 +252,6 @@ namespace Beddin.Domain.Aggregates.Users
             if (IsActive)
             {
                 return Result.Success();
-
-                //return Result.Failure("User is active");
             }
 
             IsActive = true;
@@ -270,8 +268,6 @@ namespace Beddin.Domain.Aggregates.Users
             if (!IsActive)
             {
                 return Result.Success();
-
-                //return Result.Failure("User is not active");
             }
 
             IsActive = false;
