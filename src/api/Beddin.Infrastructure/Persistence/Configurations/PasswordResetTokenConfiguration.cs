@@ -60,24 +60,9 @@ namespace Beddin.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(512);
 
-            //builder.HasIndex(p => new { p.UserId, p.ExpiresAt });
-
             builder.HasIndex(p => p.UserId)
                 .HasFilter("\"UsedAt\" IS NULL")
-                .HasDatabaseName("IX_PasswordResetTokens_ActivePerUser");
-
-            builder.HasIndex(p => p.UserId)
                 .HasDatabaseName("IX_PasswordResetTokens_UserId");
-
-            builder.HasIndex(p => p.ExpiresAt)
-                .HasDatabaseName("IX_PasswordResetTokens_ExpiresAt");
-
-
-            builder.HasIndex(p => p.UsedAt)
-                .HasDatabaseName("IX_PasswordResetTokens_UsedAt");
-
-
-            builder.Ignore("_domainEvents");
         }
     }
     
