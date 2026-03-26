@@ -64,11 +64,11 @@
       "secrets": [
         {
           "name": "EmailOptions__Username",
-          "value": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/EmailOptions__Username"
+          "valueFrom": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/EmailOptions__Username"
         },
         {
           "name": "EmailOptions__Password",
-          "value": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/EmailOptions__Password"
+          "valueFrom": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/EmailOptions__Password"
         },
         {
           "name": "Jwt__ExpirationMinutes",
