@@ -17,14 +17,6 @@
       "essential": true,
       "environment": [
         {
-          "name": "ASPNETCORE_ENVIRONMENT",
-          "value": "Production"
-        },
-        {
-          "name": "ASPNETCORE_URLS",
-          "value": "http://+:8080"
-        },
-        {
           "name": "Features__AdminPanel",
           "value": "true"
         },
@@ -59,6 +51,14 @@
         {
           "name": "EmailOptions__SmtpServer",
           "value": "smtp-relay.brevo.com"
+        },
+        {
+          "name": "ASPNETCORE_ENVIRONMENT",
+          "value": "Production"
+        },
+        {
+          "name": "ASPNETCORE_URLS",
+          "value": "http://+:8080"
         }
       ],
       "secrets": [
