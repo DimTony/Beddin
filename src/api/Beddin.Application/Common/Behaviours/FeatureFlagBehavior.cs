@@ -30,7 +30,7 @@ namespace Beddin.Application.Common.Behaviours
             if (request is not IRequiresFeature flagged)
                 return await next();
 
-            var isEnabled = _config.GetValue<bool>(flagged.FeatureFlag);
+            var isEnabled = _config.GetValue<bool?>(flagged.FeatureFlag) ?? true;
 
             if (!isEnabled)
             {
