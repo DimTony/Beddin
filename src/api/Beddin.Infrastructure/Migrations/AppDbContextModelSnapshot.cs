@@ -542,15 +542,9 @@ namespace Beddin.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExpiresAt")
-                        .HasDatabaseName("IX_PasswordResetTokens_ExpiresAt");
-
                     b.HasIndex("Token")
                         .IsUnique()
                         .HasDatabaseName("IX_PasswordResetTokens_Token");
-
-                    b.HasIndex("UsedAt")
-                        .HasDatabaseName("IX_PasswordResetTokens_UsedAt");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_PasswordResetTokens_UserId")
