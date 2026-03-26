@@ -18,6 +18,44 @@ using System.Threading.Tasks;
 
 namespace Beddin.Infrastructure.Persistence.Seed
 {
+
+    
+    public class MigrationHandler
+    {
+        private readonly AppDbContext _context;
+        private readonly ILogger<MigrationHandler> _logger;
+        private readonly IConfiguration _configuration;
+
+        public MigrationHandler(AppDbContext context, ILogger<MigrationHandler> logger, IConfiguration configuration)
+        {
+            _context = context;
+            _logger = logger;
+            _configuration = configuration;
+        }
+
+        public async Task ApplyMigrations()
+        {
+            try
+            {
+                var migrationsEnabled = _configuration.GetValue<bool>("DatabaseMigrations:Enabled", true);
+                if (!migrationsEnabled)
+                {
+                    _logger.LogInformation("Database migrations are disabled");
+                    return;
+                }
+
+                // Ensure database is created and migrations are applied
+                await _context.Database.MigrateAsync();
+
+                _logger.LogInformation("Database migrations applied successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while applying migrations to the database");
+                throw;
+            }
+        }
+    }
     public class DatabaseSeeder
     {
         private readonly AppDbContext _context;
