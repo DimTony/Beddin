@@ -59,7 +59,7 @@
         {
           "name": "EmailOptions__SmtpServer",
           "value": "smtp-relay.brevo.com"
-        },
+        }
       ],
       "secrets": [
         {
