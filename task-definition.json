@@ -23,9 +23,53 @@
         {
           "name": "ASPNETCORE_URLS",
           "value": "http://+:8080"
-        }
+        },
+        {
+          "name": "Features__AdminPanel",
+          "value": "true"
+        },
+        {
+          "name": "Features__Authentication",
+          "value": "true"
+        },
+        {
+          "name": "Features__AuditLog",
+          "value": "true"
+        },
+        {
+          "name": "DatabaseMigrations__Enabled",
+          "value": "true"
+        },
+        {
+          "name": "EmailOptions__BaseUrl",
+          "value": "https://checkonetwo.com/api"
+        },
+        {
+          "name": "EmailOptions__FromEmail",
+          "value": "noreply@habitera.homes"
+        },
+        {
+          "name": "EmailOptions__FromName",
+          "value": "Habitera"
+        },
+        {
+          "name": "EmailOptions__Port",
+          "value": "587"
+        },
+        {
+          "name": "EmailOptions__SmtpServer",
+          "value": "smtp-relay.brevo.com"
+        },
       ],
       "secrets": [
+        {
+          "name": "EmailOptions__Username",
+          "value": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/EmailOptions__Username"
+        },
+        {
+          "name": "EmailOptions__Password",
+          "value": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/EmailOptions__Password"
+        },
         {
           "name": "Jwt__ExpirationMinutes",
           "valueFrom": "arn:aws:ssm:eu-north-1:012834916544:parameter/beddin/production/Jwt__ExpirationMinutes"
