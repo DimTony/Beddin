@@ -3,7 +3,7 @@ import "./globals.css";
 import Wrapper from "./wrapper";
 
 export const metadata: Metadata = {
-  title: "Beddin",
+  title: "Beddin Admin",
   description: "All-in-one solution",
 };
 
