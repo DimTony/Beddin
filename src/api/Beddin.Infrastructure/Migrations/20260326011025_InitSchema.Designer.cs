@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Beddin.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260325114918_AddRoleJoinAndPasswordReset")]
-    partial class AddRoleJoinAndPasswordReset
+    [Migration("20260326011025_InitSchema")]
+    partial class InitSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -545,15 +545,9 @@ namespace Beddin.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExpiresAt")
-                        .HasDatabaseName("IX_PasswordResetTokens_ExpiresAt");
-
                     b.HasIndex("Token")
                         .IsUnique()
                         .HasDatabaseName("IX_PasswordResetTokens_Token");
-
-                    b.HasIndex("UsedAt")
-                        .HasDatabaseName("IX_PasswordResetTokens_UsedAt");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_PasswordResetTokens_UserId")
