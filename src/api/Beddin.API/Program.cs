@@ -10,6 +10,9 @@ builder.Services.AddApiServices(builder.Configuration);
 
 var app = builder.Build();
 
+var flagValue = app.Configuration.GetValue<bool>("Features:AdminPanel");
+app.Logger.LogInformation("Features:AdminPanel = {Value}", flagValue);
+
 await app.ApplyMigrationsAsync();
 
 if (app.Environment.IsDevelopment())
