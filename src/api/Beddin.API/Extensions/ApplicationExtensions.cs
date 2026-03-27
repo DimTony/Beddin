@@ -30,7 +30,14 @@ namespace Beddin.API.Extensions
                 var configuration = services.GetRequiredService<IConfiguration>();
                 var orchestrator = new MigrationHandler(context, logger, configuration);
 
-                logger.LogInformation("Starting database seeding...");
+                var migrationsEnabled = configuration.GetValue<bool>("DatabaseMigrations:Enabled", true);
+                if (!migrationsEnabled)
+                {
+                    logger.LogInformation("Database migrations are disabled");
+                    return app;
+                }
+
+                logger.LogInformation("Starting database migrations...");
 
                 await orchestrator.ApplyMigrations();
             }

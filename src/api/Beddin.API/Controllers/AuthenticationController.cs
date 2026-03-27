@@ -7,6 +7,7 @@ using Beddin.Application.Features.Users.Commands.ChangePassword;
 using Beddin.Application.Features.Users.Commands.ResetPassword;
 using Beddin.Application.Features.Users.Commands.Logout;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Beddin.API.Controllers
@@ -118,6 +119,7 @@ namespace Beddin.API.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout(
             [FromBody] LogoutCommand cmd)
