@@ -1,16 +1,20 @@
 import NextAuth, { DefaultSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
+import api, { confirmEmail, login } from "@/app/_services/api";
+import { extractApiError } from "@/app/_services/api-error";
 
 declare module "next-auth" {
   interface User {
     role: string;
+    accessToken: string;
   }
   interface Session {
     user: {
       id: string;
       role: string;
     };
+    accessToken: string;
   }
 }
 
@@ -18,6 +22,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: string;
+    accessToken: string;
   }
 }
 
@@ -32,15 +37,40 @@ const options: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials) return null;
-        
-        const user = await authenticateUser(
-          credentials.email,
-          credentials.password,
-        );
-        if (user) {
-          return user;
-        } else {
-          return null;
+
+        try {
+          const response = await login(credentials);
+
+          if (response) {
+            return response;
+          } else {
+            return null;
+          }
+        } catch (error) {
+          throw new Error(extractApiError(error));
+        }
+      },
+    }),
+    CredentialsProvider({
+      id: "confirm-email",
+      name: "Confirm Email",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        token: { label: "Token", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials) return null;
+
+        try {
+          const response = await confirmEmail(credentials);
+
+          if (response) {
+            return response;
+          } else {
+            return null;
+          }
+        } catch (error) {
+          throw new Error(extractApiError(error));
         }
       },
     }),
@@ -50,6 +80,7 @@ const options: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.accessToken = user.accessToken;
       }
       return token;
     },
@@ -57,13 +88,14 @@ const options: NextAuthOptions = {
       if (token) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.accessToken = token.accessToken;
       }
       return session;
     },
   },
   session: {
     strategy: "jwt",
-    maxAge: 2 * 60, // 2 minutes
+    maxAge: 30 * 60, // 30 minutes of inactivity invalidates client session
   },
   pages: {
     signIn: "/auth/signin",
@@ -71,16 +103,6 @@ const options: NextAuthOptions = {
     error: "/auth/error",
   },
 };
-
-async function authenticateUser(email: string, password: string) {
-  // Replace this with your actual user authentication logic
-  if (email === "buyer@example.com" && password === "password") {
-    return { id: "1", name: "Buyer User", email, role: "buyer" } as const;
-  } else if (email === "owner@example.com" && password === "password") {
-    return { id: "2", name: "Owner User", email, role: "owner" } as const;
-  }
-  return null;
-}
 
 export const GET = NextAuth(options);
 export const POST = NextAuth(options);

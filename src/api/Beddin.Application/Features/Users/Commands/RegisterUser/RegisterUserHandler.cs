@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Beddin.Application.Features.Users.Commands.RegisterUser
 {
-    public sealed class RegisterHandler : IRequestHandler<RegisterCommand, ApiResponse<UserDto>>
+    public sealed class RegisterHandler : IRequestHandler<RegisterCommand, ApiResponse<bool>>
     {
         private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
@@ -24,19 +24,40 @@ namespace Beddin.Application.Features.Users.Commands.RegisterUser
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<UserDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<bool>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
             var normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
             var existingUser = await _userRepository.GetByEmail(normalizedEmail, cancellationToken);
 
             if (existingUser != null)
-                return ApiResponse<UserDto>.Fail("User with this email already exists.");
+            {
+                if (!existingUser.EmailConfirmed)
+                {
+                    var validRole = await _roleRepository.GetByIdAsync(new RoleId(request.Role), cancellationToken);
+
+                    if (validRole == null)
+                        return ApiResponse<bool>.Ok(
+                            true,
+                            "Check your email for a confirmation link shortly.");
+
+                    existingUser.ResendConfirmationToken(request.FirstName, request.LastName, validRole.Id, request.Password, request.Email);
+
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                }
+
+                return ApiResponse<bool>.Ok(
+                    true,
+                    "Check your email for a confirmation link shortly.");
+
+            }
 
             var role = await _roleRepository.GetByIdAsync(new RoleId(request.Role), cancellationToken);
 
             if (role == null)
-                return ApiResponse<UserDto>.Fail("Invalid role specified.");
+                return ApiResponse<bool>.Ok(
+                   true,
+                   "Check your email for a confirmation link shortly.");
 
             var user = User.Create(request.FirstName, request.LastName, role.Id, request.Password, request.Email);
 
@@ -45,18 +66,9 @@ namespace Beddin.Application.Features.Users.Commands.RegisterUser
             await _userRepository.AddAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var userDto = new UserDto(
-                user.Id.Value,
-                user.FirstName,
-                user.LastName,
-                user.Email,
-                role.Name,
-                user.IsActive,
-                user.CreatedAt);
-
-            return ApiResponse<UserDto>.Ok(
-                userDto,
-                "Registration successful. Please check your email to confirm your account.");
+            return ApiResponse<bool>.Ok(
+                   true,
+                   "Check your email for a confirmation link shortly.");
         }
     }
 }

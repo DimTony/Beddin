@@ -37,13 +37,6 @@ namespace Beddin.Infrastructure.Persistence.Seed
         {
             try
             {
-                var migrationsEnabled = _configuration.GetValue<bool>("DatabaseMigrations:Enabled", true);
-                if (!migrationsEnabled)
-                {
-                    _logger.LogInformation("Database migrations are disabled");
-                    return;
-                }
-
                 // Ensure database is created and migrations are applied
                 await _context.Database.MigrateAsync();
 

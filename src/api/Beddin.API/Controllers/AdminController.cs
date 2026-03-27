@@ -150,6 +150,7 @@ namespace Beddin.API.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         //[Authorize(Roles = $"{UserRoles.SystemAdminInitiator},{UserRoles.SystemAdminAuthorizer}")]
         public async Task<IActionResult> GetUsers(
             [FromQuery] Guid? userId,

@@ -2,10 +2,11 @@
 
 import { SessionProvider, useSession } from "next-auth/react";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { setAccessToken, logout } from "./_services/api";
 
-const INACTIVITY_TIMEOUT = 1 * 60 * 1000;
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity will trigger sign out
 
 declare global {
   interface Window {
@@ -16,19 +17,34 @@ declare global {
 function Guard({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+  const isAuthPage = pathname.startsWith("/auth/");
 
   useEffect(() => {
     if (status === "loading") return;
 
     if (!session) {
-      router.push("/auth/signin");
+      setAccessToken(null);
+      if (!isAuthPage) {
+        router.push("/auth/signin");
+      }
       return;
     }
 
+    // Hydrate the API module with the accessToken from the session
+    setAccessToken(
+      (session as unknown as { accessToken?: string }).accessToken ?? null,
+    );
+
     const handleActivity = () => {
       clearTimeout(window.inactivityTimeout);
-      window.inactivityTimeout = setTimeout(() => {
-        signOut();
+      window.inactivityTimeout = setTimeout(async () => {
+        try {
+          await logout();
+          signOut();
+        } catch {
+          signOut();
+        }
       }, INACTIVITY_TIMEOUT);
     };
 
@@ -42,7 +58,7 @@ function Guard({ children }: { children: React.ReactNode }) {
       window.removeEventListener("mousemove", handleActivity);
       window.removeEventListener("keydown", handleActivity);
     };
-  }, [session, status, router]);
+  }, [session, status, router, isAuthPage]);
 
   if (status === "loading") return null;
 

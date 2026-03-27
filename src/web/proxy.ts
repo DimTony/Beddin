@@ -17,7 +17,7 @@ export default withAuth(
       authorized({ token, req }) {
         const { pathname } = req.nextUrl;
 
-        if (pathname === "/auth/signin") {
+        if (pathname === "/auth/signin" || pathname === "/auth/register") {
           return true;
         }
 
@@ -28,5 +28,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/", "/auth/signin"],
+  matcher: ["/", "/auth/signin", "/auth/register"],
 };

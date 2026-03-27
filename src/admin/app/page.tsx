@@ -3,6 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { useEffect } from "react";
+import api, { logout } from "./_services/api";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -10,6 +11,15 @@ export default function Home() {
   useEffect(() => {
     console.log("SESSION", session);
   }, [session]);
+
+  const testCall = async () => {
+    try {
+      const response = await api.get("/users");
+      console.log("Test API Response", response.data);
+    } catch (error) {
+      console.error("Test API Error", error);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -47,7 +57,22 @@ export default function Home() {
         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
           <button
             className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            onClick={() => signOut()}
+            onClick={testCall}
+          >
+            Test API Call
+          </button>
+        </div>
+        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+          <button
+            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+            onClick={async () => {
+              try {
+                await logout();
+                signOut();
+              } catch (error) {
+                console.error("Logout failed", error);
+              }
+            }}
           >
             Sign Out
           </button>
