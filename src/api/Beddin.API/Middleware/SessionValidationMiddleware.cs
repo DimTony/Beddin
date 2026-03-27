@@ -9,7 +9,8 @@ namespace Beddin.API.Middleware
         // These paths skip session validation
         private static readonly string[] ExcludedPaths =
         [
-            "/Authentication/Login'",
+            "/Authentication/Login",
+            "/Authentication/Logout",
             "/swagger",
             "/health",
             "/hangfire"

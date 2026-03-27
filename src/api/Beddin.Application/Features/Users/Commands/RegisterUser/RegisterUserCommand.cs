@@ -17,7 +17,7 @@ namespace Beddin.Application.Features.Users.Commands.RegisterUser
         string Email,
         string Password,
         Guid Role
-    ) : IRequest<ApiResponse<UserDto>>,  IRequiresFeature
+    ) : IRequest<ApiResponse<bool>>,  IRequiresFeature
     {
         public string FeatureFlag => FeatureFlags.Authentication;
     }

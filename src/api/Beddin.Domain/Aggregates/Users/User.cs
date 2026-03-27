@@ -140,7 +140,35 @@ namespace Beddin.Domain.Aggregates.Users
             return Result.Success();
         }
 
-        //SetRefreshToken
+        public Result ResendConfirmationToken(
+            string firstName,
+            string lastName,
+            RoleId role,
+            string plainPassword,
+            string email)
+        {
+            if (EmailConfirmed)
+                return Result.Failure("Email is already confirmed.");
+
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email is required.", nameof(email));
+
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(plainPassword);
+            RoleId = role;
+
+            EmailConfirmationToken = GenerateSecureToken();
+            EmailConfirmationTokenExpiry = DateTime.UtcNow.AddMinutes(10);
+
+            UpdatedAt = DateTime.UtcNow;
+
+            RaiseDomainEvent(new EmailConfirmationTokenGeneratedEvent(
+                Id, FirstName, LastName, Email, EmailConfirmationToken));
+
+            return Result.Success();
+        }
 
         public Result GenerateEmailConfirmationToken()
         {
@@ -157,7 +185,11 @@ namespace Beddin.Domain.Aggregates.Users
             return Result.Success();
         }
 
-        public Result ConfirmEmailToken(string token)
+        public Result ConfirmEmailAndActivate(
+            string token,
+            string refreshToken,
+            DateTime refreshTokenExpiry,
+            DateTime now)
         {
             if (EmailConfirmed)
                 return Result.Failure("Email is already confirmed.");
@@ -169,9 +201,15 @@ namespace Beddin.Domain.Aggregates.Users
                 return Result.Failure("Email confirmation token has expired.");
 
             EmailConfirmed = true;
+            IsActive = true;
             EmailConfirmationToken = null;
             EmailConfirmationTokenExpiry = null;
 
+            RefreshToken = refreshToken;
+            RefreshTokenExpiry = refreshTokenExpiry;
+            FailedLoginAttempts = 0;
+            LockedOutUntil = null;
+            LastLoginAt = now;
             UpdatedAt = DateTime.UtcNow;
 
             RaiseDomainEvent(new EmailConfirmedEvent(Id, FirstName, LastName, Email));

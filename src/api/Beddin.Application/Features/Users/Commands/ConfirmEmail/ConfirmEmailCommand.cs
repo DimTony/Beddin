@@ -1,6 +1,7 @@
 ﻿using Beddin.Application.Common.DTOs;
 using Beddin.Application.Common.Helpers;
 using Beddin.Application.Common.Interfaces;
+using Beddin.Application.Features.Users.Commands.Login;
 using Beddin.Domain.Common;
 using MediatR;
 using System;
@@ -16,7 +17,7 @@ namespace Beddin.Application.Features.Users.Commands.ConfirmEmail
       string Token,
       string? IpAddress = null,
       string? UserAgent = null
-    ) : IRequest<ApiResponse<bool>>, IRequiresFeature
+    ) : IRequest<ApiResponse<LoginResponse>>, IRequiresFeature
     {
         public string FeatureFlag => FeatureFlags.Authentication;
     }

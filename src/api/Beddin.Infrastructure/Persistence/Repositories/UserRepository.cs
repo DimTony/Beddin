@@ -1,4 +1,5 @@
-﻿using Beddin.Application.Common.DTOs;
+﻿using Azure.Core;
+using Beddin.Application.Common.DTOs;
 using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
@@ -17,8 +18,10 @@ namespace Beddin.Infrastructure.Persistence.Repositories
 
         public async Task<User?> GetByEmail(string email, CancellationToken ct = default)
         {
-          return  await _dbSet.FirstOrDefaultAsync(
-                u => u.Email == email.ToLowerInvariant().Trim(), ct);
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+
+            return  await _dbSet.FirstOrDefaultAsync(
+                u => u.Email == normalizedEmail, ct);
         }
 
         public async Task<User?> GetUserByRefreshToken(string refreshToken, CancellationToken ct = default)
@@ -49,7 +52,9 @@ namespace Beddin.Infrastructure.Persistence.Repositories
 
             if (!string.IsNullOrEmpty(email))
             {
-                query = query.Where(r => r.Email == email);
+                var normalizedEmail = email.Trim().ToLowerInvariant();
+
+                query = query.Where(r => r.Email == normalizedEmail);
             }
 
             if (roleId.HasValue)
