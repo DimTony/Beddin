@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Admin.Commands.ActivateUser
 {
-    public sealed class DeactivateUserHandler : IRequestHandler<ActivateUserCommand, ApiResponse<bool>>
+    public sealed class ActivateUserHandler : IRequestHandler<ActivateUserCommand, ApiResponse<bool>>
     {
         private readonly IUserRepository _userRepository;
         private readonly IResetPasswordRepository _resetPasswordRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public DeactivateUserHandler(
+        public ActivateUserHandler(
             IUserRepository userRepository,
             IResetPasswordRepository resetPasswordRepository,
             IUnitOfWork unitOfWork)

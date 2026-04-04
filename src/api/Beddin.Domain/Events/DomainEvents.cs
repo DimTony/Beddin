@@ -58,6 +58,13 @@ namespace Beddin.Domain.Events
        UserId UserId,
        DateTime RevokedAt) : DomainEvent;
 
+    public record UserLockedOutEvent(
+      UserId UserId,
+      string FirstName,
+      string LastName,
+      string Email,
+      DateTime LockedOutUntil) : DomainEvent;
+
     
 
 

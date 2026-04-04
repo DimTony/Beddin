@@ -1,11 +1,7 @@
 ﻿using Beddin.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Beddin.Infrastructure.Services
 {
@@ -22,8 +18,12 @@ namespace Beddin.Infrastructure.Services
         {
             get
             {
-                var value = _httpContextAccessor.HttpContext?
-                    .User.FindFirstValue(ClaimTypes.NameIdentifier);
+                // Prefer the raw JWT "sub" claim — works regardless of MapInboundClaims
+                var value = _httpContextAccessor.HttpContext?.User
+                    .FindFirstValue(JwtRegisteredClaimNames.Sub)
+                    ?? _httpContextAccessor.HttpContext?.User
+                       .FindFirstValue(ClaimTypes.NameIdentifier); // fallback for mapped tokens
+
                 return Guid.TryParse(value, out var id) ? id : null;
             }
         }
@@ -34,8 +34,6 @@ namespace Beddin.Infrastructure.Services
         public string? UserAgent =>
           _httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString();
 
-        public string? Role =>
-            _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role);
 
         public Guid? SessionId
         {
@@ -47,8 +45,17 @@ namespace Beddin.Infrastructure.Services
             }
         }
 
+        public string? Role =>
+    _httpContextAccessor.HttpContext?.User
+        .FindFirstValue("role")                          
+        ?? _httpContextAccessor.HttpContext?.User
+           .FindFirstValue(ClaimTypes.Role);             
+
         public string? Name =>
-            _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
+            _httpContextAccessor.HttpContext?.User
+                .FindFirstValue(JwtRegisteredClaimNames.Name) 
+                ?? _httpContextAccessor.HttpContext?.User
+                   .FindFirstValue(ClaimTypes.Name);
         public string? Email =>
             _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email);
     }

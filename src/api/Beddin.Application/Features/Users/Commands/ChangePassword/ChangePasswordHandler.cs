@@ -11,20 +11,17 @@ namespace Beddin.Application.Features.Users.Commands.ChangePassword
 {
     public sealed class ChangePasswordHandler : IRequestHandler<ChangePasswordCommand, ApiResponse<string>>
     {
-        private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserSessionRepository _sessionRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentUserService _currentUser;
 
         public ChangePasswordHandler(
-            IRoleRepository roleRepository,
             IUserRepository userRepository,
             IUserSessionRepository sessionRepository,
             IUnitOfWork unitOfWork,
             ICurrentUserService currentUser)
         {
-            _roleRepository = roleRepository;
             _userRepository = userRepository;
             _sessionRepository = sessionRepository;
             _unitOfWork = unitOfWork;
@@ -46,7 +43,30 @@ namespace Beddin.Application.Features.Users.Commands.ChangePassword
             if (user == null)
                 return ApiResponse<string>.Fail("User not found.");
 
-            var result = user.ChangePassword(request.CurrentPassword, request.NewPassword);
+            var isValidCurrentPassword = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash);
+
+            if (!isValidCurrentPassword)
+            {
+                // Log failed attempt
+                //user.AddDomainEvent(new UserPasswordChangeFailedEvent(user.Id, "Invalid current password"));
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                return ApiResponse<string>.Fail("Current password is incorrect.");
+            }
+
+            var newPasswordSameAsCurrent = BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash);
+
+            if (newPasswordSameAsCurrent)
+            {
+                // Log failed attempt
+                //user.AddDomainEvent(new UserPasswordChangeFailedEvent(user.Id, "New password cannot be the same as the current password"));
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                return ApiResponse<string>.Fail("New password cannot be the same as the current password.");
+            }   
+
+            var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+            var result = user.ChangePassword(newPasswordHash);
+
             if (!result.IsSuccess)
                 return ApiResponse<string>.Fail(result.Error!);
 

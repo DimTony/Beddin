@@ -42,6 +42,7 @@ namespace Beddin.Application.Features.Users.Commands.Login
 
         public async Task<ApiResponse<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
+
             // Find identity user
             var user = await _userRepository.GetByEmail(request.Email, cancellationToken);
             if (user == null)
@@ -59,7 +60,25 @@ namespace Beddin.Application.Features.Users.Commands.Login
             var expirationMinutes = int.TryParse(_configuration["Jwt:RefreshTokenExpiryMinutes"], out var mins) ? mins : 10080;
             var refreshTokenExpiry = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
-            var result = user.AttemptLogin(request.Password, refreshToken, refreshTokenExpiry, DateTime.UtcNow);
+            var isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+
+            if (!isValidPassword)
+            {
+                var validationTime = DateTime.UtcNow;
+                user.RecordFailedLoginAttempt(validationTime);
+
+                if (user.LockedOutUntil.HasValue && user.LockedOutUntil > validationTime)
+                {
+                    await _userRepository.UpdateAsync(user, cancellationToken);
+                    _logger.LogWarning("User {Email} account locked due to multiple failed login attempts.", request.Email);
+                    //await _emailService.SendAccountLockoutEmail(user.Email, LockoutMinutes);
+                    return ApiResponse<LoginResponse>.Fail($"Account locked due to multiple failed login attempts. Try again in {LockoutMinutes} minutes.");
+                }
+                await _userRepository.UpdateAsync(user, cancellationToken);
+                return ApiResponse<LoginResponse>.Fail("Invalid email or password.");
+            }
+
+            var result = user.AttemptLogin(refreshToken, refreshTokenExpiry, DateTime.UtcNow);
 
             if (!result.IsSuccess)
             {

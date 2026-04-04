@@ -1,6 +1,7 @@
 ﻿using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -16,14 +17,16 @@ namespace Beddin.Infrastructure.Services
     public class JwtTokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<JwtTokenService> _logger;
         private readonly string _secretKey;
         private readonly string _issuer;
         private readonly string _audience;
         private readonly int _expirationMinutes;
 
-        public JwtTokenService(IConfiguration configuration)
+        public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
             _secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
             _issuer = _configuration["Jwt:Issuer"] ?? "BeddinAPI";
             _audience = _configuration["Jwt:Audience"] ?? "BeddinClient";
@@ -42,6 +45,11 @@ namespace Beddin.Infrastructure.Services
                 new Claim("session_id", sessionId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            if (user.MustChangePassword)
+            {
+                claims.Add(new Claim("must_change_password", "true"));
+            }
 
             if (additionalClaims != null)
             {
@@ -89,11 +97,45 @@ namespace Beddin.Infrastructure.Services
                     ClockSkew = TimeSpan.Zero
                 };
 
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
                 return principal;
             }
-            catch
+            catch (SecurityTokenExpiredException ex)
             {
+                // Expected — token simply expired. Info level, no alarm.
+                _logger.LogInformation("Token validation failed: token expired at {Expiry}", ex.Expires);
+                return null;
+            }
+            catch (SecurityTokenInvalidSignatureException ex)
+            {
+                var sessionId = TryReadSessionIdUnsafe(token);
+                _logger.LogWarning(ex,
+                    "Invalid signature on token. SessionId (unverified): {SessionId}. Prefix: {Prefix}",
+                    sessionId, SafeTokenPrefix(token));
+                return null;
+            }
+            catch (SecurityTokenInvalidIssuerException ex)
+            {
+                _logger.LogWarning(ex,
+                    "Token validation failed: invalid issuer '{Issuer}'", ex.InvalidIssuer);
+                return null;
+            }
+            catch (SecurityTokenInvalidAudienceException ex)
+            {
+                _logger.LogWarning(ex,
+                    "Token validation failed: invalid audience '{Audience}'", ex.InvalidAudience);
+                return null;
+            }
+            catch (SecurityTokenException ex)
+            {
+                // Catch-all for other token-specific issues (malformed, not-yet-valid, etc.)
+                _logger.LogWarning(ex, "Token validation failed: {Reason}", ex.Message);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // Truly unexpected — infrastructure failure, key parsing error, etc.
+                _logger.LogError(ex, "Unexpected error during token validation");
                 return null;
             }
         }
@@ -133,5 +175,19 @@ namespace Beddin.Infrastructure.Services
                 return null;
             }
         }
+        private string? TryReadSessionIdUnsafe(string token)
+        {
+            try
+            {
+                var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
+                return jwtToken.Claims.FirstOrDefault(c => c.Type == "session_id")?.Value;
+            }
+            catch
+            {
+                return null; // Truly unreadable — not loggable
+            }
+        }
+        private static string SafeTokenPrefix(string token) =>
+            token.Length > 20 ? token[..20] + "…" : "[short token]";
     }
 }

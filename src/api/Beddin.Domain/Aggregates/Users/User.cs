@@ -1,5 +1,4 @@
-﻿using BCrypt.Net;
-using Beddin.Domain.Aggregates.Properties;
+﻿using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Common;
 using Beddin.Domain.Events;
 using Microsoft.AspNetCore.Identity;
@@ -18,6 +17,7 @@ namespace Beddin.Domain.Aggregates.Users
         public RoleId RoleId { get; private set; } = default!;
         public bool IsActive { get; set; } = false;
         public bool EmailConfirmed { get; set; } = false;
+        public bool MustChangePassword { get; set; } = false;
         public string? EmailConfirmationToken { get; private set; }
         public DateTime? EmailConfirmationTokenExpiry { get; private set; }
         public string? RefreshToken { get; set; }
@@ -53,7 +53,7 @@ namespace Beddin.Domain.Aggregates.Users
             string firstName,
             string lastName,
             RoleId role,
-            string plainPassword,
+            string passwordHash,
             string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -65,7 +65,7 @@ namespace Beddin.Domain.Aggregates.Users
                 FirstName = firstName,
                 LastName = lastName,
                 Email = email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(plainPassword),
+                PasswordHash = passwordHash,
                 RoleId = role,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -81,14 +81,24 @@ namespace Beddin.Domain.Aggregates.Users
             return user;
         }
 
-        public Result AttemptLogin(string password, string refreshToken,
+        public void RecordFailedLoginAttempt(DateTime now)
+        {
+            FailedLoginAttempts++;
+            if (FailedLoginAttempts >= 3)
+            {
+                LockedOutUntil = now.AddMinutes(30);
+                RaiseDomainEvent(new UserLockedOutEvent(
+                    Id,
+                    FirstName,
+                    LastName,
+                    Email,
+                    LockedOutUntil.Value));
+            }
+        }
+
+        public Result AttemptLogin(string refreshToken,
             DateTime refreshTokenExpiry, DateTime now)
         {
-            if (LockedOutUntil.HasValue && LockedOutUntil > now)
-            {
-                return Result.Failure($"Account is locked until {LockedOutUntil.Value}.");
-            }
-
             if (LockedOutUntil.HasValue && LockedOutUntil <= now)
             {
                 LockedOutUntil = null;
@@ -100,25 +110,6 @@ namespace Beddin.Domain.Aggregates.Users
 
             if (!IsActive)
                 return Result.Failure("Account is deactivated. Please contact support.");
-
-            if (!VerifyPassword(password))
-            {
-                FailedLoginAttempts++;
-
-                if (FailedLoginAttempts >= 3)
-                {
-                    LockedOutUntil = now.AddMinutes(30);
-                    //RaiseDomainEvent(new UserLockedOutEvent(
-                    //    Id,
-                    //    FirstName,
-                    //    LastName,
-                    //    Email,
-                    //    LockedOutUntil.Value));
-                    return Result.Failure($"Account locked due to {FailedLoginAttempts} failed login attempts. Try again in 30 minutes.");
-                }
-
-                return Result.Failure($"Invalid email or password. {3 - FailedLoginAttempts} attempts remaining.");
-            }
 
             RefreshToken = refreshToken;
             RefreshTokenExpiry = refreshTokenExpiry;
@@ -144,7 +135,7 @@ namespace Beddin.Domain.Aggregates.Users
             string firstName,
             string lastName,
             RoleId role,
-            string plainPassword,
+            string passwordHash,
             string email)
         {
             if (EmailConfirmed)
@@ -156,7 +147,7 @@ namespace Beddin.Domain.Aggregates.Users
             FirstName = firstName;
             LastName = lastName;
             Email = email;
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(plainPassword);
+            PasswordHash = passwordHash;
             RoleId = role;
 
             EmailConfirmationToken = GenerateSecureToken();
@@ -217,15 +208,11 @@ namespace Beddin.Domain.Aggregates.Users
             return Result.Success();
         }
 
-        public Result ChangePassword(string currentPassword, string newPassword)
+        public Result ChangePassword(string newPasswordHash)
         {
-            if (!VerifyPassword(currentPassword))
-                return Result.Failure("Current password is incorrect.");
 
-            if (BCrypt.Net.BCrypt.Verify(newPassword, PasswordHash))
-                return Result.Failure("New password cannot be the same as current password.");
 
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            PasswordHash = newPasswordHash;
             RefreshToken = null;
             RefreshTokenExpiry = null;
             UpdatedAt = DateTime.UtcNow;
@@ -235,13 +222,9 @@ namespace Beddin.Domain.Aggregates.Users
             return Result.Success();
         }
 
-        public Result ResetPassword(string newPassword)
+        public Result ResetPassword(string newPasswordHash)
         {
-
-            if (BCrypt.Net.BCrypt.Verify(newPassword, PasswordHash))
-                return Result.Failure("New password cannot be the same as current password.");
-
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            PasswordHash = newPasswordHash;
             RefreshToken = null;
             RefreshTokenExpiry = null;
             UpdatedAt = DateTime.UtcNow;
@@ -249,11 +232,6 @@ namespace Beddin.Domain.Aggregates.Users
             RaiseDomainEvent(new PasswordChangedEvent(Id, FirstName, LastName, Email));
 
             return Result.Success();
-        }
-
-        public bool VerifyPassword(string password)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, PasswordHash);
         }
 
         public Result UpdateEmail(string newEmail)

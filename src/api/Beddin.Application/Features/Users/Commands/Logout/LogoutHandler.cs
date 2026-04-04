@@ -64,17 +64,6 @@ namespace Beddin.Application.Features.Users.Commands.Logout
 
                 }
             }
-            else
-            {
-
-                var activeSession = await _sessionRepository.GetActiveSession(new UserId(userId.Value), cancellationToken);
-                if (activeSession != null)
-                {
-                    activeSession.Invalidate("User logged out");
-                    await _sessionRepository.Update(activeSession, cancellationToken);
-                }
-
-            }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

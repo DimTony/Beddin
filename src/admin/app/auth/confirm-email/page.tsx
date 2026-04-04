@@ -37,11 +37,11 @@ const ConfirmEmail = () => {
 
         // await api.post("/Authentication/ConfirmEmail", { email, token });
         // setStatus("success");
-        toast.success("Email confirmed successfully!");
-
+        
         if (confirmationResult?.error) {
           toast.error(confirmationResult.error);
         } else {
+          toast.success("Email confirmed successfully!");
           window.location.replace("/");
         }
       } catch (error) {

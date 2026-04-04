@@ -51,6 +51,10 @@ namespace Beddin.API.Controllers
         public async Task<IActionResult> ConfirmEmail(
             [FromBody] ConfirmEmailCommand cmd)
         {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString()
+             ?? Request.Headers["X-Forwarded-For"].FirstOrDefault()
+             ?? "";
+
             var result = await _mediator.Send(cmd);
 
             if (!result.Success)
@@ -63,6 +67,8 @@ namespace Beddin.API.Controllers
         public async Task<IActionResult> Login(
             [FromBody] LoginCommand cmd)
         {
+         
+
             var result = await _mediator.Send(cmd);
 
             if (!result.Success)

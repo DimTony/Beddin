@@ -8,14 +8,14 @@ import api, { logout } from "./_services/api";
 export default function Home() {
   const { data: session } = useSession();
 
-  useEffect(() => {
-    console.log("SESSION", session);
-  }, [session]);
+  // useEffect(() => {
+  //   console.log("SESSION", session);
+  // }, [session]);
 
   const testCall = async () => {
     try {
       const response = await api.get("/users");
-      console.log("Test API Response", response.data);
+      // console.log("Test API Response", response.data);
     } catch (error) {
       console.error("Test API Error", error);
     }

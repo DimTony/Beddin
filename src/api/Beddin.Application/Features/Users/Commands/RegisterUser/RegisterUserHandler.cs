@@ -5,6 +5,8 @@ using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using BCrypt.Net;
+
 
 namespace Beddin.Application.Features.Users.Commands.RegisterUser
 {
@@ -41,7 +43,9 @@ namespace Beddin.Application.Features.Users.Commands.RegisterUser
                             true,
                             "Check your email for a confirmation link shortly.");
 
-                    existingUser.ResendConfirmationToken(request.FirstName, request.LastName, validRole.Id, request.Password, request.Email);
+                    var existingUserPasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                    existingUser.ResendConfirmationToken(request.FirstName, request.LastName, validRole.Id, existingUserPasswordHash, request.Email);
 
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
                 }
@@ -59,7 +63,9 @@ namespace Beddin.Application.Features.Users.Commands.RegisterUser
                    true,
                    "Check your email for a confirmation link shortly.");
 
-            var user = User.Create(request.FirstName, request.LastName, role.Id, request.Password, request.Email);
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            var user = User.Create(request.FirstName, request.LastName, role.Id, passwordHash, request.Email);
 
             user.GenerateEmailConfirmationToken();
 

@@ -6,24 +6,19 @@ using Beddin.Domain.Common;
 using Beddin.Infrastructure.Persistence;
 using Beddin.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Beddin.Infrastructure.Services
 {
     public class AuditLogService : IAuditLogService
     {
         private readonly AppDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public AuditLogService(AppDbContext context)
+        public AuditLogService(AppDbContext context, IUnitOfWork unitOfWork)
         {
             _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<AuditLogId> RecordAsync(
@@ -47,7 +42,8 @@ namespace Beddin.Infrastructure.Services
             );
 
             await _context.AuditLogs.AddAsync(entry, ct);
-            await _context.SaveChangesAsync(ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
 
             return entry.Id;
         }
@@ -66,8 +62,9 @@ namespace Beddin.Infrastructure.Services
             entry.Status = succeeded ? AuditStatus.Succeeded : AuditStatus.Failed;
             entry.FailureReason = failureReason;
             entry.CompletedAt = DateTime.UtcNow;
+            
+            await _unitOfWork.SaveChangesAsync(ct);
 
-            await _context.SaveChangesAsync(ct);
         }
     }
 }

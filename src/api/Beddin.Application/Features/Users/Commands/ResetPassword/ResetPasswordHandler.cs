@@ -13,29 +13,25 @@ namespace Beddin.Application.Features.Users.Commands.ResetPassword
 {
     public sealed class RequestPasswordResetHandler : IRequestHandler<RequestPasswordResetCommand, ApiResponse<bool>>
     {
-        private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
         private readonly IResetPasswordRepository _resetPasswordRepository;
-        private readonly ICurrentUserService _currentUser;
         private readonly IUnitOfWork _unitOfWork;
 
         public RequestPasswordResetHandler(
-            IRoleRepository roleRepository,
             IUserRepository userRepository,
             IResetPasswordRepository resetPasswordRepository,
-            ICurrentUserService currentUser,
             IUnitOfWork unitOfWork)
         {
-            _roleRepository = roleRepository;
             _userRepository = userRepository;
             _resetPasswordRepository = resetPasswordRepository;
-            _currentUser = currentUser;
             _unitOfWork = unitOfWork;
         }
 
         public async Task<ApiResponse<bool>> Handle(RequestPasswordResetCommand request, CancellationToken cancellationToken)
         {
-            
+            if (string.IsNullOrEmpty(request.IpAddress) || string.IsNullOrEmpty(request.UserAgent))
+                return ApiResponse<bool>.Fail("IpAddress and UserAgent are required");
+
             if (string.IsNullOrEmpty(request.Email))
                 return ApiResponse<bool>.Fail("An error occured resetting password");
 
@@ -97,7 +93,19 @@ namespace Beddin.Application.Features.Users.Commands.ResetPassword
             if (tokenOwner == null || user.Id != tokenOwner.Id)
                 return ApiResponse<bool>.Fail("Token is invalid or has expired.");
 
-            var resetResult = tokenOwner.ResetPassword(request.NewPassword);
+            var newPasswordSameAsCurrent = BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash);
+
+            if (newPasswordSameAsCurrent)
+            {
+                // Log failed attempt
+                //user.AddDomainEvent(new UserPasswordChangeFailedEvent(user.Id, "New password cannot be the same as the current password"));
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                return ApiResponse<bool>.Fail("New password cannot be the same as the current password.");
+            }
+
+            var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+            var resetResult = tokenOwner.ResetPassword(newPasswordHash);
 
             if (!resetResult.IsSuccess)
                 return ApiResponse<bool>.Fail($"Reset Failed. {resetResult.Error} ");

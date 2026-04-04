@@ -133,7 +133,7 @@ namespace Beddin.Infrastructure
                     .AddEntityFrameworkCoreInstrumentation()
                     .AddSource(serviceName)          // custom ActivitySource
                     .AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint))
-                    .AddConsoleExporter()            // remove in prod
+                    //.AddConsoleExporter()            // remove in prod
                 )
                 .WithMetrics(metrics => metrics
                     .AddAspNetCoreInstrumentation()

@@ -8,9 +8,6 @@ import api, { logout } from "./_services/api";
 export default function Home() {
   const { data: session } = useSession();
 
-  useEffect(() => {
-    console.log("SESSION", session);
-  }, [session]);
 
   const testCall = async () => {
     try {
