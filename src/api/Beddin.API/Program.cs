@@ -1,3 +1,7 @@
+// <copyright file="Program.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
 using Beddin.API.Extensions;
 using Beddin.Infrastructure;
 
@@ -6,7 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddApiServices(builder.Configuration);
-
 
 var app = builder.Build();
 
@@ -27,5 +30,9 @@ app.MapHealthChecks("/api/health");
 
 app.Run();
 
-public partial class Program { }
-
+/// <summary>
+/// Entry point for the Beddin API application.
+/// </summary>
+public partial class Program
+{
+}
