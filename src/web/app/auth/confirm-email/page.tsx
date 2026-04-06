@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
-import api from "../../_services/api";
 import { extractApiError } from "../../_services/api-error";
 import { signIn } from "next-auth/react";
 
