@@ -77,8 +77,10 @@ api.interceptors.response.use(
               sameSite: "strict",
               path: "/",
             });
-          } catch (cookieErr) {
-            console.error("[AUTH] Failed to set server cookie:", cookieErr);
+          } 
+          catch (cookieErr) {
+            // console.error("[AUTH] Failed to set server cookie:", cookieErr);
+            throw cookieErr;
           }
         } else {
           Cookies.set("refreshToken", data.data.refreshToken, {
@@ -137,10 +139,11 @@ export const login = async (credentials: {
           path: "/",
         });
       } catch (cookieErr) {
-        console.error(
-          "[AUTH] Failed to set server cookie:",
-          cookieErr,
-        );
+        // console.error(
+        //   "[AUTH] Failed to set server cookie:",
+        //   cookieErr,
+        // );
+        throw cookieErr
       }
     } else {
       Cookies.set("refreshToken", data.data.refreshToken, {
@@ -167,7 +170,7 @@ export const login = async (credentials: {
       accessToken: data.data.accessToken,
     };
   } catch (error) {
-    console.error("Login failed:", error);
+    // console.error("Login failed:", error);
     throw error;
   }
 };
@@ -197,7 +200,8 @@ export const confirmEmail = async (credentials: {
           path: "/",
         });
       } catch (cookieErr) {
-        console.error("[AUTH] Failed to set server cookie:", cookieErr);
+        throw cookieErr;
+        // console.error("[AUTH] Failed to set server cookie:", cookieErr);
       }
     } else {
       Cookies.set("refreshToken", data.data.refreshToken, {
@@ -224,7 +228,7 @@ export const confirmEmail = async (credentials: {
       accessToken: data.data.accessToken,
     };
   } catch (error) {
-    console.error("Email confirmation failed:", error);
+    // console.error("Email confirmation failed:", error);
     throw error;
   }
 };
