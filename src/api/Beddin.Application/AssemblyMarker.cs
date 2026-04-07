@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="AssemblyMarker.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
 
 namespace Beddin.Application
 {
@@ -10,5 +8,7 @@ namespace Beddin.Application
     /// Marker class used to locate the Application assembly for MediatR
     /// and FluentValidation registration. Never instantiated.
     /// </summary>
-    public abstract class AssemblyMarker { }
+    public abstract class AssemblyMarker
+    {
+    }
 }

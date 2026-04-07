@@ -1,17 +1,23 @@
-﻿using Beddin.Domain.Aggregates.Properties;
+﻿// <copyright file="AmenityConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Provides the Entity Framework configuration for the <see cref="Amenity"/> entity.
+    /// </summary>
     public class AmenityConfiguration : IEntityTypeConfiguration<Amenity>
     {
+        /// <summary>
+        /// Configures the <see cref="Amenity"/> entity type.
+        /// </summary>
+        /// <param name="builder">The builder to be used to configure the entity type.</param>
         public void Configure(EntityTypeBuilder<Amenity> builder)
         {
             builder.HasKey(p => p.Id);

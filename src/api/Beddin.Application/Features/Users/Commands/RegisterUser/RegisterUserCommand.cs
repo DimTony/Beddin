@@ -1,51 +1,56 @@
-﻿using Beddin.Application.Common.DTOs;
+﻿// <copyright file="RegisterUserCommand.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Application.Common.DTOs;
 using Beddin.Application.Common.Helpers;
 using Beddin.Application.Common.Interfaces;
-using Beddin.Domain.Common;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Users.Commands.RegisterUser
 {
+    /// <summary>
+    /// Command to register a new user.
+    /// </summary>
+    /// <param name="FirstName">The user's first name.</param>
+    /// <param name="LastName">The user's last name.</param>
+    /// <param name="Email">The user's email address.</param>
+    /// <param name="Password">The user's password.</param>
+    /// <param name="Role">The role identifier for the user.</param>
+#pragma warning disable SA1649 // File name should match first type name
     public sealed record RegisterCommand(
+#pragma warning restore SA1649 // File name should match first type name
         string FirstName,
         string LastName,
         string Email,
         string Password,
-        Guid Role
-    ) : IRequest<ApiResponse<bool>>,  IRequiresFeature
+        Guid Role)
+        : IRequest<ApiResponse<bool>>, IRequiresFeature
     {
+        /// <summary>
+        /// Gets the feature flag that must be enabled for this command.
+        /// </summary>
         public string FeatureFlag => FeatureFlags.Authentication;
     }
 
+    /// <summary>
+    /// Data transfer object for user information.
+    /// </summary>
+    /// <param name="Id">The user identifier.</param>
+    /// <param name="FirstName">The user's first name.</param>
+    /// <param name="LastName">The user's last name.</param>
+    /// <param name="Email">The user's email address.</param>
+    /// <param name="Role">The user's role name.</param>
+    /// <param name="IsActive">Whether the user is active.</param>
+    /// <param name="CreatedAt">The date and time when the user was created.</param>
+#pragma warning disable SA1402 // File may only contain a single type
     public sealed record UserDto(
+#pragma warning restore SA1402 // File may only contain a single type
         Guid Id,
         string FirstName,
         string LastName,
         string Email,
         string Role,
         bool IsActive,
-        DateTime CreatedAt
-    );
-
-    //
-
-    //public record CreateUserCommand(
-    //string Username,
-    //string Email,
-    //string FirstName,
-    //string LastName,
-    //string Password,
-    //string Role,
-    //Guid? MemberId) : IRequest<Result<Guid>>, IAuditable, IRequiresFeature
-    //{
-    //    public string AuditResource => "User";
-    //    public Guid? AuditResourceId => null;
-
-    //    public string FeatureFlag => FeatureFlags.UserManagement;
-    //}
+        DateTime CreatedAt);
 }

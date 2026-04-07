@@ -1,17 +1,20 @@
-﻿using Beddin.Domain.Aggregates.Users;
+﻿// <copyright file="InquiryConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// The <c>InquiryConfiguration</c> class is responsible for configuring the entity mapping for the <see cref="Inquiry"/> entity in the Entity Framework Core context. It implements the <see cref="IEntityTypeConfiguration{TEntity}"/> interface, allowing it to define how the properties of the <see cref="Inquiry"/> entity should be mapped to the database schema. This includes specifying primary keys, property conversions, relationships, indexes, and other constraints. By using this configuration class, you can ensure that the database schema is properly aligned with the domain model for inquiries, facilitating efficient data storage and retrieval while maintaining data integrity and consistency. The configuration also includes specific indexes to optimize common query patterns related to inquiries, such as retrieving unread inquiries for agents or inquiries related to specific properties.
+    /// </summary>
     public class InquiryConfiguration : IEntityTypeConfiguration<Inquiry>
     {
+        /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<Inquiry> builder)
         {
             builder.HasKey(i => i.Id);

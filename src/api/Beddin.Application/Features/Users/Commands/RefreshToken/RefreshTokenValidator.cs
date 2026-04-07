@@ -1,18 +1,22 @@
-﻿using Beddin.Application.Features.Users.Commands.Login;
+﻿// <copyright file="RefreshTokenValidator.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Users.Commands.RefreshToken
 {
+    /// <summary>
+    /// Validator for the <see cref="RefreshTokenCommand"/>.
+    /// </summary>
     public class RefreshTokenValidator : AbstractValidator<RefreshTokenCommand>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RefreshTokenValidator"/> class.
+        /// </summary>
         public RefreshTokenValidator()
         {
-            RuleFor(x => x.RefreshToken)
+            this.RuleFor(x => x.RefreshToken)
                 .NotEmpty().WithMessage("Refresh token is required.");
         }
     }

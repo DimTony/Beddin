@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// <copyright file="ExceptionHandlingMiddleware.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
 using System.Net;
 using System.Text.Json;
-using Beddin.Application.Common.Exceptions;
 using Beddin.Application.Common.DTOs;
+using Beddin.Application.Common.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 using ValidationException = Beddin.Application.Common.Exceptions.ValidationException;
 
 namespace Beddin.API.Middleware
@@ -18,34 +22,45 @@ namespace Beddin.API.Middleware
     ///   ForbiddenException   → 403
     ///   ConflictException    → 409
     ///   OperationCancelledEx → 499 (client disconnected — not logged as error)
-    ///   Everything else      → 500 (logged, detail hidden from client)
+    ///   Everything else      → 500 (logged, detail hidden from client).
     /// </summary>
     public class ExceptionHandlingMiddleware
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionHandlingMiddleware> _logger;
-        private readonly IHostEnvironment _environment;
+        private readonly RequestDelegate next;
+        private readonly ILogger<ExceptionHandlingMiddleware> logger;
+        private readonly IHostEnvironment environment;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ExceptionHandlingMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The next middleware in the pipeline.</param>
+        /// <param name="logger">The logger instance for logging exceptions.</param>
+        /// <param name="environment">The hosting environment.</param>
         public ExceptionHandlingMiddleware(
             RequestDelegate next,
             ILogger<ExceptionHandlingMiddleware> logger,
             IHostEnvironment environment)
         {
-            _next = next;
-            _logger = logger;
-            _environment = environment;
+            this.next = next;
+            this.logger = logger;
+            this.environment = environment;
         }
 
+        /// <summary>
+        /// Invokes the middleware to catch unhandled exceptions, log them appropriately, and return a consistent JSON response with the correct HTTP status code based on the type of exception. It handles specific exceptions like validation failures, not found, forbidden access, conflicts, and client cancellations, while logging unexpected errors without exposing details to the client in production environments.
+        /// </summary>
+        /// <param name="context">The HTTP context for the current request.</param>
+        /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
         public async Task InvokeAsync(HttpContext context)
         {
             try
             {
-                await _next(context);
+                await this.next(context);
             }
             catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
             {
                 // Client disconnected — not an error, don't log as one
-                _logger.LogInformation(
+                this.logger.LogInformation(
                     "Request cancelled by client: {Method} {Path}",
                     context.Request.Method,
                     context.Request.Path);
@@ -54,7 +69,7 @@ namespace Beddin.API.Middleware
             }
             catch (ValidationException ex)
             {
-                _logger.LogWarning(
+                this.logger.LogWarning(
                     "Validation failure on {Method} {Path}: {Errors}",
                     context.Request.Method,
                     context.Request.Path,
@@ -70,7 +85,7 @@ namespace Beddin.API.Middleware
             }
             catch (NotFoundException ex)
             {
-                _logger.LogWarning(
+                this.logger.LogWarning(
                     "Resource not found on {Method} {Path}: {Message}",
                     context.Request.Method,
                     context.Request.Path,
@@ -83,7 +98,7 @@ namespace Beddin.API.Middleware
             }
             catch (ForbiddenException ex)
             {
-                _logger.LogWarning(
+                this.logger.LogWarning(
                     "Forbidden access on {Method} {Path} by user {UserId}: {Message}",
                     context.Request.Method,
                     context.Request.Path,
@@ -97,7 +112,7 @@ namespace Beddin.API.Middleware
             }
             catch (ConflictException ex)
             {
-                _logger.LogWarning(
+                this.logger.LogWarning(
                     "Conflict on {Method} {Path}: {Message}",
                     context.Request.Method,
                     context.Request.Path,
@@ -111,14 +126,14 @@ namespace Beddin.API.Middleware
             catch (Exception ex)
             {
                 // Unknown exception — log full details but hide from client
-                _logger.LogError(
+                this.logger.LogError(
                     ex,
                     "Unhandled exception on {Method} {Path}",
                     context.Request.Method,
                     context.Request.Path);
 
-                var message = _environment.IsDevelopment()
-                    ? ex.Message          // show detail locally
+                var message = this.environment.IsDevelopment()
+                    ? ex.Message // show detail locally
                     : "An unexpected error occurred. Please try again or contact support.";
 
                 await WriteResponseAsync(

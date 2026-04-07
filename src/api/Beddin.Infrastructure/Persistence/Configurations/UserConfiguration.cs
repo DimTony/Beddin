@@ -1,10 +1,18 @@
-﻿using Beddin.Domain.Aggregates.Users;
+﻿// <copyright file="UserConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+/// <summary>
+/// Entity Framework configuration for the <see cref="User"/> aggregate.
+/// </summary>
 public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
+    /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.HasKey(u => u.Id);

@@ -1,49 +1,166 @@
-﻿using Beddin.Application.Common.Interfaces;
+﻿// <copyright file="AppDbContext.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Application.Common.Interfaces;
+using Beddin.Domain.Aggregates.AuditLog;
 using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Beddin.Domain.Aggregates.AuditLog;
 
 namespace Beddin.Infrastructure.Persistence
 {
+    /// <summary>
+    /// Represents the application's database context, providing access to all entities and handling persistence logic.
+    /// </summary>
     public class AppDbContext : DbContext, IReadDbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-        public DbSet<Role> Roles => Set<Role>();
-        public DbSet<User> Users => Set<User>();
-        public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
-        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-        public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
-        public DbSet<UserSession> UserSessions => Set<UserSession>();
-        public DbSet<Property> Properties => Set<Property>();
-        public DbSet<Favorite> Favorites => Set<Favorite>();
-        public DbSet<Amenity> Amenities => Set<Amenity>();
-        public DbSet<PropertyAmenity> PropertyAmenities => Set<PropertyAmenity>();
-        public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
-        public DbSet<Inquiry> Inquiries => Set<Inquiry>();
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AppDbContext"/> class.
+        /// </summary>
+        /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options)
+        {
+        }
 
-        IQueryable<Role> IReadDbContext.Roles => Roles;
-        IQueryable<User> IReadDbContext.Users => Users;
-        IQueryable<PasswordResetToken> IReadDbContext.PasswordResetTokens => PasswordResetTokens;
-        IQueryable<AuditLog> IReadDbContext.AuditLogs => AuditLogs;
-        IQueryable<SavedSearch> IReadDbContext.SavedSearches => SavedSearches;
-        IQueryable<UserSession> IReadDbContext.UserSessions => UserSessions;
-        IQueryable<Property> IReadDbContext.Properties => Properties;
-        IQueryable<Favorite> IReadDbContext.Favorites => Favorites;
-        IQueryable<Amenity> IReadDbContext.Amenities => Amenities;
-        IQueryable<PropertyAmenity> IReadDbContext.PropertyAmenities => PropertyAmenities;
-        IQueryable<PropertyImage> IReadDbContext.PropertyImages => PropertyImages;
-        IQueryable<Inquiry> IReadDbContext.Inquiries => Inquiries;
+        /// <summary>
+        /// Gets the <see cref="DbSet{Role}"/> representing the collection of roles in the database.
+        /// </summary>
+        public DbSet<Role> Roles => this.Set<Role>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{User}"/> representing the collection of users in the database.
+        /// </summary>
+        public DbSet<User> Users => this.Set<User>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{PasswordResetToken}"/> representing the collection of password reset tokens in the database.
+        /// </summary>
+        public DbSet<PasswordResetToken> PasswordResetTokens => this.Set<PasswordResetToken>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{AuditLog}"/> representing the collection of audit logs in the database.
+        /// </summary>
+        public DbSet<AuditLog> AuditLogs => this.Set<AuditLog>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{SavedSearch}"/> representing the collection of saved searches in the database.
+        /// </summary>
+        public DbSet<SavedSearch> SavedSearches => this.Set<SavedSearch>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{UserSession}"/> representing the collection of user sessions in the database.
+        /// </summary>
+        public DbSet<UserSession> UserSessions => this.Set<UserSession>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{Property}"/> representing the collection of properties in the database.
+        /// </summary>
+        public DbSet<Property> Properties => this.Set<Property>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{Favorite}"/> representing the collection of favorites in the database.
+        /// </summary>
+        public DbSet<Favorite> Favorites => this.Set<Favorite>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{Amenity}"/> representing the collection of amenities in the database.
+        /// </summary>
+        public DbSet<Amenity> Amenities => this.Set<Amenity>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{PropertyAmenity}"/> representing the collection of property amenities in the database.
+        /// </summary>
+        public DbSet<PropertyAmenity> PropertyAmenities => this.Set<PropertyAmenity>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{PropertyImage}"/> representing the collection of property images in the database.
+        /// </summary>
+        public DbSet<PropertyImage> PropertyImages => this.Set<PropertyImage>();
+
+        /// <summary>
+        /// Gets the <see cref="DbSet{Inquiry}"/> representing the collection of inquiries in the database.
+        /// </summary>
+        public DbSet<Inquiry> Inquiries => this.Set<Inquiry>();
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{Role}"/> representing the collection of roles in the database for read operations.
+        /// </summary>
+        IQueryable<Role> IReadDbContext.Roles => this.Roles;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{User}"/> representing the collection of users in the database for read operations.
+        /// </summary>
+        IQueryable<User> IReadDbContext.Users => this.Users;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{PasswordResetToken}"/> representing the collection of password reset tokens in the database for read operations.
+        /// </summary>
+        IQueryable<PasswordResetToken> IReadDbContext.PasswordResetTokens => this.PasswordResetTokens;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{AuditLog}"/> representing the collection of audit logs in the database for read operations.
+        /// </summary>
+        IQueryable<AuditLog> IReadDbContext.AuditLogs => this.AuditLogs;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{SavedSearch}"/> representing the collection of saved searches in the database for read operations.
+        /// </summary>
+        IQueryable<SavedSearch> IReadDbContext.SavedSearches => this.SavedSearches;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{UserSession}"/> representing the collection of user sessions in the database for read operations.
+        /// </summary>
+        IQueryable<UserSession> IReadDbContext.UserSessions => this.UserSessions;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{Property}"/> representing the collection of properties in the database for read operations.
+        /// </summary>
+        IQueryable<Property> IReadDbContext.Properties => this.Properties;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{Favorite}"/> representing the collection of favorites in the database for read operations.
+        /// </summary>
+        IQueryable<Favorite> IReadDbContext.Favorites => this.Favorites;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{Amenity}"/> representing the collection of amenities in the database for read operations.
+        /// </summary>
+        IQueryable<Amenity> IReadDbContext.Amenities => this.Amenities;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{PropertyAmenity}"/> representing the collection of property amenities in the database for read operations.
+        /// </summary>
+        IQueryable<PropertyAmenity> IReadDbContext.PropertyAmenities => this.PropertyAmenities;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{PropertyImage}"/> representing the collection of property images in the database for read operations.
+        /// </summary>
+        IQueryable<PropertyImage> IReadDbContext.PropertyImages => this.PropertyImages;
+
+        /// <summary>
+        /// Gets the <see cref="IQueryable{Inquiry}"/> representing the collection of inquiries in the database for read operations.
+        /// </summary>
+        IQueryable<Inquiry> IReadDbContext.Inquiries => this.Inquiries;
+
+        /// <summary>
+        /// Saves all changes made in this context to the database asynchronously, applying soft delete logic.
+        /// </summary>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+        /// <returns>The number of state entries written to the database.</returns>
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            ApplySoftDelete();
+            this.ApplySoftDelete();
             return base.SaveChangesAsync(cancellationToken);
         }
 
-
+        /// <summary>
+        /// Configures the schema needed for the context.
+        /// </summary>
+        /// <param name="modelBuilder">The builder being used to construct the model for this context.</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Ignore<DomainEvent>();
@@ -75,17 +192,12 @@ namespace Beddin.Infrastructure.Persistence
 
             base.OnModelCreating(modelBuilder);
         }
-        private void ApplySoftDelete()
-        {
-            foreach (var entry in ChangeTracker.Entries<ISoftDeletable>())
-            {
-                if (entry.State == EntityState.Deleted)
-                {
-                    entry.State = EntityState.Modified;
-                    entry.Entity.Delete();
-                }
-            }
-        }
+
+        /// <summary>
+        /// Generates a query filter expression for soft-deletable entities.
+        /// </summary>
+        /// <param name="entityType">The entity type.</param>
+        /// <returns>A lambda expression representing the filter.</returns>
         private static System.Linq.Expressions.LambdaExpression GenerateSoftDeleteFilter(Type entityType)
         {
             var parameter = System.Linq.Expressions.Expression.Parameter(entityType, "e");
@@ -93,6 +205,11 @@ namespace Beddin.Infrastructure.Persistence
             var body = System.Linq.Expressions.Expression.Equal(property, System.Linq.Expressions.Expression.Constant(false));
             return System.Linq.Expressions.Expression.Lambda(body, parameter);
         }
+
+        /// <summary>
+        /// Registers value converters for strongly-typed IDs.
+        /// </summary>
+        /// <param name="modelBuilder">The model builder.</param>
         private static void RegisterStronglyTypedIdConverters(ModelBuilder modelBuilder)
         {
             var auditLogIdConverter = new ValueConverter<AuditLogId, Guid>(
@@ -147,34 +264,71 @@ namespace Beddin.Infrastructure.Persistence
             {
                 foreach (var property in entityType.GetProperties())
                 {
-            
                     if (property.ClrType == typeof(UserId))
+                    {
                         property.SetValueConverter(userIdConverter);
+                    }
                     else if (property.ClrType == typeof(RoleId))
+                    {
                         property.SetValueConverter(roleIdConverter);
+                    }
                     else if (property.ClrType == typeof(AuditLogId))
+                    {
                         property.SetValueConverter(auditLogIdConverter);
+                    }
                     else if (property.ClrType == typeof(PasswordResetTokenId))
+                    {
                         property.SetValueConverter(passwordResetTokenIdConverter);
+                    }
                     else if (property.ClrType == typeof(SavedSearchId))
+                    {
                         property.SetValueConverter(savedSearchIdConverter);
+                    }
                     else if (property.ClrType == typeof(UserSessionId))
+                    {
                         property.SetValueConverter(userSessionIdConverter);
+                    }
                     else if (property.ClrType == typeof(PropertyId))
+                    {
                         property.SetValueConverter(propertyIdConverter);
+                    }
                     else if (property.ClrType == typeof(FavoriteId))
+                    {
                         property.SetValueConverter(favoriteIdConverter);
+                    }
                     else if (property.ClrType == typeof(AmenityId))
+                    {
                         property.SetValueConverter(amenityIdConverter);
+                    }
                     else if (property.ClrType == typeof(PropertyAmenityId))
+                    {
                         property.SetValueConverter(propertyAmenityIdConverter);
+                    }
                     else if (property.ClrType == typeof(PropertyImageId))
+                    {
                         property.SetValueConverter(propertyImageIdConverter);
+                    }
                     else if (property.ClrType == typeof(InquiryId))
+                    {
                         property.SetValueConverter(inquiryIdConverter);
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Applies soft delete logic to entities implementing <see cref="ISoftDeletable"/>.
+        /// </summary>
+        private void ApplySoftDelete()
+        {
+            foreach (var entry in this.ChangeTracker.Entries<ISoftDeletable>())
+            {
+                if (entry.State == EntityState.Deleted)
+                {
+                    entry.State = EntityState.Modified;
+                    entry.Entity.Delete();
+                }
+            }
+        }
     }
 }

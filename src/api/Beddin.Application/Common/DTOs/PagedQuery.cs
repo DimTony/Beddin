@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="PagedQuery.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
 
 namespace Beddin.Application.Common.DTOs
 {
@@ -12,26 +10,35 @@ namespace Beddin.Application.Common.DTOs
     /// </summary>
     public abstract record PagedQuery
     {
-        private int _page = 1;
-        private int _pageSize = 20;
+        private int page = 1;
+        private int pageSize = 20;
 
+        /// <summary>
+        /// Gets the current page number. Defaults to 1 if value is less than 1.
+        /// </summary>
         public int Page
         {
-            get => _page;
-            init => _page = value < 1 ? 1 : value;
+            get => this.page;
+            init => this.page = value < 1 ? 1 : value;
         }
 
+        /// <summary>
+        /// Gets the page size. Defaults to 20 if value is less than 1, capped at 100.
+        /// </summary>
         public int PageSize
         {
-            get => _pageSize;
-            init => _pageSize = value switch
+            get => this.pageSize;
+            init => this.pageSize = value switch
             {
                 < 1 => 20,
-                > 100 => 100,   // hard cap — never allow unbounded queries
-                _ => value
+                > 100 => 100,
+                _ => value,
             };
         }
 
-        public int Skip => (Page - 1) * PageSize;
+        /// <summary>
+        /// Gets the number of items to skip based on the current page and page size.
+        /// </summary>
+        public int Skip => (this.Page - 1) * this.PageSize;
     }
 }

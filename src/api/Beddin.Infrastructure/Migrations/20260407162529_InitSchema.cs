@@ -261,6 +261,7 @@ namespace Beddin.Infrastructure.Migrations
                     RoleId = table.Column<Guid>(type: "uuid", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    MustChangePassword = table.Column<bool>(type: "boolean", nullable: false),
                     EmailConfirmationToken = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
                     EmailConfirmationTokenExpiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     RefreshToken = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),

@@ -1,21 +1,34 @@
-﻿using Beddin.Application.Common.Options;
+﻿// <copyright file="LoggingBehavior.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using System.Diagnostics;
+using Beddin.Application.Common.Options;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Trace;
-using System.Diagnostics;
 
 namespace Beddin.Application.Common.Behaviours
 {
+    /// <summary>
+    /// Pipeline behavior that logs request handling and tracks performance.
+    /// </summary>
+    /// <typeparam name="TRequest">The type of the request.</typeparam>
+    /// <typeparam name="TResponse">The type of the response.</typeparam>
     public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
     {
-        private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
+        private readonly ILogger<LoggingBehavior<TRequest, TResponse>> logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoggingBehavior{TRequest, TResponse}"/> class.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
         public LoggingBehavior(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
         {
-            _logger = logger;
+            this.logger = logger;
         }
 
+        /// <inheritdoc/>
         public async Task<TResponse> Handle(
             TRequest request,
             RequestHandlerDelegate<TResponse> next,
@@ -28,7 +41,7 @@ namespace Beddin.Application.Common.Behaviours
 
             activity?.SetTag("request.type", requestName);
 
-            _logger.LogInformation("Handling {Request}", requestName);
+            this.logger.LogInformation("Handling {Request}", requestName);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -37,9 +50,10 @@ namespace Beddin.Application.Common.Behaviours
                 var response = await next();
                 stopwatch.Stop();
 
-                _logger.LogInformation(
+                this.logger.LogInformation(
                     "Handled {Request} in {ElapsedMilliseconds}ms",
-                    requestName, stopwatch.ElapsedMilliseconds);
+                    requestName,
+                    stopwatch.ElapsedMilliseconds);
 
                 activity?.SetStatus(ActivityStatusCode.Ok);
 
@@ -49,9 +63,11 @@ namespace Beddin.Application.Common.Behaviours
             {
                 stopwatch.Stop();
 
-                _logger.LogError(ex,
+                this.logger.LogError(
+                    ex,
                     "Error handling {Request} after {ElapsedMilliseconds}ms",
-                    requestName, stopwatch.ElapsedMilliseconds);
+                    requestName,
+                    stopwatch.ElapsedMilliseconds);
 
                 activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
                 activity?.AddException(ex);

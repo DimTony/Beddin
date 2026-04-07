@@ -1,27 +1,35 @@
-﻿using Beddin.Application.Common.Interfaces;
+﻿// <copyright file="DependencyInjection.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Application.Common.Interfaces;
 using Beddin.Application.Common.Options;
-using Beddin.Domain.Aggregates.Users;
 using Beddin.Infrastructure.Persistence;
 using Beddin.Infrastructure.Persistence.BackgroundJobs;
 using Beddin.Infrastructure.Persistence.Repositories;
 using Beddin.Infrastructure.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using StackExchange.Redis;
-using HealthChecks.NpgSql;
-using HealthChecks.Redis; // Add this using directive
 
 namespace Beddin.Infrastructure
 {
+    /// <summary>
+    /// Provides extension methods for registering infrastructure services.
+    /// </summary>
     public static class DependencyInjection
     {
+        /// <summary>
+        /// Adds infrastructure services to the specified <see cref="IServiceCollection"/>.
+        /// </summary>
+        /// <param name="services">The service collection to add services to.</param>
+        /// <param name="configuration">The application configuration.</param>
+        /// <returns>The updated service collection.</returns>
         public static IServiceCollection AddInfrastructure(
             this IServiceCollection services,
             IConfiguration configuration)
@@ -35,6 +43,12 @@ namespace Beddin.Infrastructure
             return services;
         }
 
+        /// <summary>
+        /// Adds database-related services to the specified <see cref="IServiceCollection"/>.
+        /// </summary>
+        /// <param name="services">The service collection to add services to.</param>
+        /// <param name="configuration">The application configuration.</param>
+        /// <returns>The updated service collection.</returns>
         public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -48,11 +62,8 @@ namespace Beddin.Infrastructure
                         npgsqlOptions.EnableRetryOnFailure(
                             maxRetryCount: 3,
                             maxRetryDelay: TimeSpan.FromSeconds(10),
-                            errorCodesToAdd: null
-                        );
-                    }
-                )
-            );
+                            errorCodesToAdd: null);
+                    }));
 
             services.AddScoped<IReadDbContext>(provider =>
                 provider.GetRequiredService<AppDbContext>());
@@ -80,6 +91,12 @@ namespace Beddin.Infrastructure
 
             return services;
         }
+
+        /// <summary>
+        /// Adds repository services to the specified <see cref="IServiceCollection"/>.
+        /// </summary>
+        /// <param name="services">The service collection to add services to.</param>
+        /// <returns>The updated service collection.</returns>
         public static IServiceCollection AddRepositories(this IServiceCollection services)
         {
             services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
@@ -91,27 +108,12 @@ namespace Beddin.Infrastructure
             return services;
         }
 
-        private static IServiceCollection AddServices(
-            this IServiceCollection services)
-        {
-            services.AddHttpContextAccessor();
-
-            //services.AddSingleton<IRateLimitService, RedisRateLimitService>();
-
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<IAuditLogService, AuditLogService>();
-
-
-            // Auth Services
-            services.AddScoped<IPasswordService, PasswordService>();
-            services.AddScoped<ITokenService, JwtTokenService>();
-            services.AddScoped<IEmailService, EmailService>();
-
-            // Jobs
-            services.AddScoped<SessionCleanupJob>();
-
-            return services;
-        }
+        /// <summary>
+        /// Adds observability (OpenTelemetry) services to the specified <see cref="IServiceCollection"/>.
+        /// </summary>
+        /// <param name="services">The service collection to add services to.</param>
+        /// <param name="configuration">The application configuration.</param>
+        /// <returns>The updated service collection.</returns>
         public static IServiceCollection AddObservability(
            this IServiceCollection services,
            IConfiguration configuration)
@@ -131,16 +133,38 @@ namespace Beddin.Infrastructure
                     })
                     .AddHttpClientInstrumentation()
                     .AddEntityFrameworkCoreInstrumentation()
-                    .AddSource(serviceName)          // custom ActivitySource
-                    .AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint))
-                    //.AddConsoleExporter()            // remove in prod
-                )
+                    .AddSource(serviceName)
+                    .AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint)))
                 .WithMetrics(metrics => metrics
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
-                    .AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint))
-                );
+                    .AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint)));
+
+            return services;
+        }
+
+        /// <summary>
+        /// Adds application services to the specified <see cref="IServiceCollection"/>.
+        /// </summary>
+        /// <param name="services">The service collection to add services to.</param>
+        /// <returns>The updated service collection.</returns>
+        private static IServiceCollection AddServices(
+            this IServiceCollection services)
+        {
+            services.AddHttpContextAccessor();
+
+            // services.AddSingleton<IRateLimitService, RedisRateLimitService>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IAuditLogService, AuditLogService>();
+
+            // Auth Services
+            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<IEmailService, EmailService>();
+
+            // Jobs
+            services.AddScoped<SessionCleanupJob>();
 
             return services;
         }
