@@ -3,7 +3,7 @@
   "settings": {
     "documentationRules": {
       "companyName": "Beddin",
-      "copyrightText": "Copyright (c) {2026} Beddin. All rights reserved.",
+      "copyrightText": "Copyright (c) {companyName}. All rights reserved.",
       "documentExposedElements": true,
       "documentInternalElements": false,
       "documentPrivateElements": false,
