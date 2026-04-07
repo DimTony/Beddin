@@ -1,16 +1,42 @@
 {
-  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/stylecop.schema.json",
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
   "settings": {
     "documentationRules": {
       "companyName": "Beddin",
       "copyrightText": "Copyright (c) {2026} Beddin. All rights reserved.",
-      "headerDecoration": "-------",
-      "documentInterfaces": true,
       "documentExposedElements": true,
       "documentInternalElements": false,
       "documentPrivateElements": false,
-      "documentPrivateMethods": false,
-      "documentationCulture": "en-US"
+      "documentPrivateFields": false,
+      "documentInterfaces": true,
+      "fileNamingConvention": "stylecop"
+    },
+    "namingRules": {
+      "allowCommonHungarianPrefixes": false,
+      "allowedHungarianPrefixes": []
+    },
+    "orderingRules": {
+      "usingDirectivesPlacement": "outsideNamespace",
+      "elementOrder": [
+        "kind",
+        "accessibility",
+        "constant",
+        "static",
+        "readonly"
+      ]
+    },
+    "maintainabilityRules": {
+      "topLevelTypes": [
+        "class",
+        "interface",
+        "struct",
+        "enum",
+        "delegate"
+      ]
+    },
+    "layoutRules": {
+      "newlineAtEndOfFile": "require",
+      "allowConsecutiveUsings": true
     }
   }
 }
