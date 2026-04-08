@@ -1,25 +1,27 @@
-﻿using Beddin.Domain.Aggregates.AuditLog;
+﻿// <copyright file="AuditLogConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.AuditLog;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// This class configures the entity framework mapping for the AuditLog entity, defining how it should be stored in the database, including property conversions, relationships, indexes, and concurrency control. It ensures that the AuditLog entity is properly mapped to a database table with the necessary constraints and optimizations for efficient querying and data integrity.
+    /// </summary>
     public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
     {
+        /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<AuditLog> builder)
         {
-            
             builder.HasKey(a => a.Id);
 
             builder.Property(p => p.Id)
                .HasConversion(id => id.Value, value => new AuditLogId(value));
-            ;
+
             builder.Property(a => a.UserId).IsRequired();
 
             builder.Property(a => a.Action).HasMaxLength(100).IsRequired();
@@ -56,8 +58,6 @@ namespace Beddin.Infrastructure.Persistence.Configurations
             builder.HasIndex(a => a.Status);
 
             builder.HasIndex(a => new { a.UserId, a.CreatedAt });
-
-
         }
     }
 }

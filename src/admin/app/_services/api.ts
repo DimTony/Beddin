@@ -4,6 +4,21 @@ import { signOut } from "next-auth/react";
 import { showApiError } from "./api-error";
 import Cookies from "js-cookie";
 
+export const getClientInfo = async () => {
+  const userAgent = typeof window !== "undefined" ? navigator.userAgent : "";
+
+  let ipAddress = "";
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+    ipAddress = data.ip ?? "";
+  } catch {
+    ipAddress = "";
+  }
+
+  return { ipAddress, userAgent };
+};
+
 const api = axios.create({
   baseURL: "http://localhost:5171",
 });
@@ -27,7 +42,7 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
-    console.log("Request sent:", config);
+    // console.log("Request sent:", config);
     return config;
   },
   (error) => Promise.reject(error),
@@ -102,10 +117,12 @@ export const login = async (credentials: {
   password: string;
 }) => {
   try {
+    const { ipAddress, userAgent } = await getClientInfo();
+
     const payload = {
       ...credentials,
-      ipAddress: "",
-      userAgent: "",
+      ipAddress,
+      userAgent,
     };
     const { data } = await api.post("/Authentication/Login", payload);
 
@@ -119,10 +136,7 @@ export const login = async (credentials: {
           path: "/",
         });
       } catch (cookieErr) {
-        console.error(
-          "[AUTH] Failed to set server cookie:",
-          cookieErr,
-        );
+        console.error("[AUTH] Failed to set server cookie:", cookieErr);
       }
     } else {
       Cookies.set("refreshToken", data.data.refreshToken, {
@@ -159,10 +173,12 @@ export const confirmEmail = async (credentials: {
   token: string;
 }) => {
   try {
+    const { ipAddress, userAgent } = await getClientInfo();
+
     const payload = {
       ...credentials,
-      ipAddress: "",
-      userAgent: "",
+      ipAddress,
+      userAgent,
     };
     const { data } = await api.post("/Authentication/ConfirmEmail", payload);
 
@@ -203,7 +219,7 @@ export const confirmEmail = async (credentials: {
       accessToken: data.data.accessToken,
     };
   } catch (error) {
-    console.error("Login failed:", error);
+    console.error("Email confirmation failed:", error);
     throw error;
   }
 };

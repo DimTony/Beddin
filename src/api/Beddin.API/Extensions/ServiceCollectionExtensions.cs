@@ -1,22 +1,34 @@
-﻿using Beddin.Application;
+﻿// <copyright file="ServiceCollectionExtensions.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using System.Text;
+using System.Text.Json.Serialization;
+using Beddin.Application;
 using Beddin.Application.Common.Behaviours;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
-using System.Text.Json.Serialization;
 
 namespace Beddin.API.Extensions
 {
+    /// <summary>
+    /// A static class that provides extension methods for configuring services in the API project, such as MediatR, FluentValidation, authentication, controllers, Swagger, and CORS policies.
+    /// </summary>
     public static class ServiceCollectionExtensions
     {
+        /// <summary>
+        /// Adds API services to the service collection.
+        /// </summary>
+        /// <param name="services">The service collection to add the API services to.</param>
+        /// <param name="configuration">The configuration instance for accessing settings.</param>
+        /// <returns>The updated service collection.</returns>
         public static IServiceCollection AddApiServices(
             this IServiceCollection services,
             IConfiguration configuration)
         {
-
             services.AddMediatR(cfg =>
             {
                 cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly);
@@ -26,19 +38,16 @@ namespace Beddin.API.Extensions
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AuditLogBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(DomainEventBehavior<,>));
-                //cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RateLimitingBehaviour<,>));
             });
 
             services.AddValidatorsFromAssembly(
                 typeof(AssemblyMarker).Assembly);
 
-
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
-            {   
+            {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]!)),
@@ -50,7 +59,6 @@ namespace Beddin.API.Extensions
                     ClockSkew = TimeSpan.Zero,
                 };
             });
-
 
             services.AddControllers()
                 .AddJsonOptions(option =>
@@ -66,7 +74,7 @@ namespace Beddin.API.Extensions
                 {
                     Title = "Beddin API",
                     Version = "v1",
-                    Description = "House Hunting API"
+                    Description = "House Hunting API",
                 });
 
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -76,7 +84,7 @@ namespace Beddin.API.Extensions
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Enter: Bearer {your token}"
+                    Description = "Enter: Bearer {your token}",
                 });
 
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -87,11 +95,11 @@ namespace Beddin.API.Extensions
                         Reference = new OpenApiReference
                         {
                             Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
+                            Id = "Bearer",
+                        },
                     },
                     Array.Empty<string>()
-                }
+                },
             });
             });
 

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="IRequiresFeature.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
 
 namespace Beddin.Application.Common.Interfaces
 {
@@ -13,6 +11,9 @@ namespace Beddin.Application.Common.Interfaces
     /// </summary>
     public interface IRequiresFeature
     {
+        /// <summary>
+        /// Gets the name of the feature flag required to execute the command or query.
+        /// </summary>
         string FeatureFlag { get; }
     }
 }

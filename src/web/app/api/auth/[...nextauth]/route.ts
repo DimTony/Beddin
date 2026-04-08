@@ -1,7 +1,7 @@
-import NextAuth, { DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
-import api, { confirmEmail, login } from "@/app/_services/api";
+import { confirmEmail, login } from "@/app/_services/api";
 import { extractApiError } from "@/app/_services/api-error";
 
 declare module "next-auth" {

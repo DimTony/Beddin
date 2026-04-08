@@ -1,18 +1,22 @@
-﻿using Beddin.Application.Features.Users.Commands.RefreshToken;
+﻿// <copyright file="LogoutValidator.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Users.Commands.Logout
 {
+    /// <summary>
+    /// Validator for the <see cref="LogoutCommand"/>.
+    /// </summary>
     public class LogoutValidator : AbstractValidator<LogoutCommand>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LogoutValidator"/> class.
+        /// </summary>
         public LogoutValidator()
         {
-            RuleFor(x => x.LogoutAllSessions);
+            this.RuleFor(x => x.LogoutAllSessions);
         }
     }
 }

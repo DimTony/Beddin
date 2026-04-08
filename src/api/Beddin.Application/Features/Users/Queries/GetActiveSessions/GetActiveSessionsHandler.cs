@@ -1,23 +1,30 @@
-﻿using Beddin.Application.Common.Interfaces;
+﻿// <copyright file="GetActiveSessionsHandler.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Common;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Users.Queries.GetActiveSessions
 {
+    /// <summary>
+    /// Handler definition for getting active sessions of a user using their userId identifier.
+    /// </summary>
     public sealed class GetActiveSessionsHandler : IRequestHandler<GetActiveSessionsQuery, Result<IEnumerable<SessionDto>>>
     {
-        private readonly IUserSessionRepository _sessionRepository;
+        private readonly IUserSessionRepository sessionRepository;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GetActiveSessionsHandler"/> class.
+        /// </summary>
+        /// <param name="sessionRepository">The repository for managing user sessions.</param>
         public GetActiveSessionsHandler(IUserSessionRepository sessionRepository)
         {
-            _sessionRepository = sessionRepository;
+            this.sessionRepository = sessionRepository;
         }
 
+        /// <inheritdoc/>
         public async Task<Result<IEnumerable<SessionDto>>> Handle(GetActiveSessionsQuery request, CancellationToken cancellationToken)
         {
             if (!Guid.TryParse(request.UserId, out var userIdGuid))
@@ -26,7 +33,7 @@ namespace Beddin.Application.Features.Users.Queries.GetActiveSessions
             }
 
             var userId = new UserId(userIdGuid);
-            var sessions = await _sessionRepository.GetSessionHistory(userId, cancellationToken);
+            var sessions = await this.sessionRepository.GetSessionHistory(userId, cancellationToken);
 
             var sessionDtos = sessions
                 .Where(s => s.IsActive) // Only active sessions
@@ -37,8 +44,7 @@ namespace Beddin.Application.Features.Users.Queries.GetActiveSessions
                     s.UserAgent,
                     s.CreatedAt,
                     s.ExpiresAt,
-                    s.IsActive
-                ))
+                    s.IsActive))
                 .ToList();
 
             return Result.Success<IEnumerable<SessionDto>>(sessionDtos);

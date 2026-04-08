@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Beddin.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260326011025_InitSchema")]
+    [Migration("20260407162529_InitSchema")]
     partial class InitSchema
     {
         /// <inheritdoc />
@@ -737,6 +737,9 @@ namespace Beddin.Infrastructure.Migrations
 
                     b.Property<DateTime?>("LockedOutUntil")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()

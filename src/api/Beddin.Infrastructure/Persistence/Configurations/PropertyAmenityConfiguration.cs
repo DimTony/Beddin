@@ -1,12 +1,20 @@
-﻿using Beddin.Domain.Aggregates.Properties;
+﻿// <copyright file="PropertyAmenityConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Provides the Entity Framework Core configuration for the <see cref="PropertyAmenity"/> entity, including key definitions, property conversions, relationships, and indexes.
+    /// </summary>
     public class PropertyAmenityConfiguration : IEntityTypeConfiguration<PropertyAmenity>
     {
+        /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<PropertyAmenity> builder)
         {
             builder.HasKey(p => p.Id);
@@ -29,7 +37,6 @@ namespace Beddin.Infrastructure.Persistence.Configurations
                 .WithMany() // or .WithMany(p => p.Bookings) if you add collection
                 .HasForeignKey(b => b.PropertyId)
                 .HasPrincipalKey(p => p.Id);
-
 
             builder.Ignore(p => p.DomainEvents);
         }

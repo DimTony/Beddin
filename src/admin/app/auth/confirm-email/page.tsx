@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
-import api from "../../_services/api";
 import { extractApiError } from "../../_services/api-error";
 import { signIn } from "next-auth/react";
 
@@ -37,11 +36,11 @@ const ConfirmEmail = () => {
 
         // await api.post("/Authentication/ConfirmEmail", { email, token });
         // setStatus("success");
-        toast.success("Email confirmed successfully!");
-
+        
         if (confirmationResult?.error) {
           toast.error(confirmationResult.error);
         } else {
+          toast.success("Email confirmed successfully!");
           window.location.replace("/");
         }
       } catch (error) {

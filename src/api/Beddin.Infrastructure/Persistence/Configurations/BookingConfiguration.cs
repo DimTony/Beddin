@@ -1,13 +1,20 @@
-﻿using Beddin.Domain.Aggregates.Properties;
+﻿// <copyright file="BookingConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
- 
+    /// <summary>
+    /// This class configures the entity framework mapping for the Booking entity, defining how it should be stored in the database, including property conversions, relationships, indexes, and concurrency control. It ensures that the Booking entity is properly mapped to a database table with the necessary constraints and optimizations for efficient querying and data integrity.
+    /// </summary>
     public class BookingConfiguration : IEntityTypeConfiguration<Booking>
     {
+        /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<Booking> builder)
         {
             builder.HasKey(b => b.Id);
@@ -59,7 +66,6 @@ namespace Beddin.Infrastructure.Persistence.Configurations
                 .IsConcurrencyToken();
 
             builder.Ignore(p => p.DomainEvents);
-
         }
     }
 }

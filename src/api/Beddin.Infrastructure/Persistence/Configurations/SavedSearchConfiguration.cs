@@ -1,12 +1,20 @@
-﻿using Beddin.Domain.Aggregates.Users;
+﻿// <copyright file="SavedSearchConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Provides the Entity Framework Core configuration for the <see cref="SavedSearch"/> entity, defining how it maps to the database schema. This configuration includes setting up primary keys, property conversions, relationships, indexes, and constraints to ensure that the SavedSearch entity is stored and retrieved correctly from the database. The configuration also specifies cascade delete behavior for related entities and ignores domain events for persistence purposes.
+    /// </summary>
     public class SavedSearchConfiguration : IEntityTypeConfiguration<SavedSearch>
     {
+        /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<SavedSearch> builder)
         {
             builder.HasKey(x => x.Id);

@@ -1,20 +1,34 @@
-﻿using Beddin.Application.Common.DTOs;
+﻿// <copyright file="RefreshTokenHandler.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Application.Common.DTOs;
 using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
-using Beddin.Domain.Common;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 
 namespace Beddin.Application.Features.Users.Commands.RefreshToken
 {
+    /// <summary>
+    /// Handler for the <see cref="RefreshTokenCommand"/>.
+    /// </summary>
     public sealed class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, ApiResponse<RefreshTokenResponse>>
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IUserSessionRepository _sessionRepository;
-        private readonly ITokenService _tokenService;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IConfiguration _configuration;
+        private readonly IUserRepository userRepository;
+        private readonly IUserSessionRepository sessionRepository;
+        private readonly ITokenService tokenService;
+        private readonly IUnitOfWork unitOfWork;
+        private readonly IConfiguration configuration;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RefreshTokenHandler"/> class.
+        /// </summary>
+        /// <param name="userRepository">The user repository.</param>
+        /// <param name="sessionRepository">The session repository.</param>
+        /// <param name="tokenService">The token service.</param>
+        /// <param name="unitOfWork">The unit of work.</param>
+        /// <param name="configuration">The configuration.</param>
         public RefreshTokenHandler(
             IUserRepository userRepository,
             IUserSessionRepository sessionRepository,
@@ -22,16 +36,17 @@ namespace Beddin.Application.Features.Users.Commands.RefreshToken
             IUnitOfWork unitOfWork,
             IConfiguration configuration)
         {
-            _userRepository = userRepository;
-            _sessionRepository = sessionRepository;
-            _tokenService = tokenService;
-            _unitOfWork = unitOfWork;
-            _configuration = configuration;
+            this.userRepository = userRepository;
+            this.sessionRepository = sessionRepository;
+            this.tokenService = tokenService;
+            this.unitOfWork = unitOfWork;
+            this.configuration = configuration;
         }
 
+        /// <inheritdoc/>
         public async Task<ApiResponse<RefreshTokenResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetUserByRefreshToken(request.RefreshToken, cancellationToken);
+            var user = await this.userRepository.GetUserByRefreshToken(request.RefreshToken, cancellationToken);
 
             if (user == null)
             {
@@ -48,9 +63,8 @@ namespace Beddin.Application.Features.Users.Commands.RefreshToken
                 return ApiResponse<RefreshTokenResponse>.Fail("Invalid refresh token.");
             }
 
-
             var tokenHash = UserSession.ComputeHash(request.RefreshToken);
-            var session = await _sessionRepository.GetByTokenHash(tokenHash, cancellationToken);
+            var session = await this.sessionRepository.GetByTokenHash(tokenHash, cancellationToken);
 
             if (session == null)
             {
@@ -59,22 +73,24 @@ namespace Beddin.Application.Features.Users.Commands.RefreshToken
 
             if (!session.IsActive)
             {
-                var allSessions = await _sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
+                var allSessions = await this.sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
                 foreach (var s in allSessions)
+                {
                     s.Invalidate("Refresh token reuse detected");
+                }
 
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                await this.unitOfWork.SaveChangesAsync(cancellationToken);
                 return ApiResponse<RefreshTokenResponse>.Fail("Invalid refresh token.");
             }
 
-            var activeSessions = await _sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
+            var activeSessions = await this.sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
             foreach (var activeSession in activeSessions)
             {
                 activeSession.Invalidate("Token refreshed");
             }
 
-            var newRefreshToken = _tokenService.GenerateRefreshToken();
-            var expirationMinutes = int.TryParse(_configuration["Jwt:RefreshTokenExpiryMinutes"], out var mins) ? mins : 10080;
+            var newRefreshToken = this.tokenService.GenerateRefreshToken();
+            var expirationMinutes = int.TryParse(this.configuration["Jwt:RefreshTokenExpiryMinutes"], out var mins) ? mins : 10080;
             var newRefreshTokenExpiry = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
             user.SetRefreshToken(newRefreshToken, newRefreshTokenExpiry);
@@ -84,20 +100,17 @@ namespace Beddin.Application.Features.Users.Commands.RefreshToken
                 newRefreshToken,
                 newRefreshTokenExpiry,
                 request.IpAddress,
-                request.UserAgent
-            );
+                request.UserAgent);
 
-            await _sessionRepository.Add(newSession, cancellationToken);
+            await this.sessionRepository.Add(newSession, cancellationToken);
 
-            var accessToken = _tokenService.GenerateAccessToken(user, newSession.Id.Value);
+            var accessToken = this.tokenService.GenerateAccessToken(user, newSession.Id.Value);
 
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await this.unitOfWork.SaveChangesAsync(cancellationToken);
 
             return ApiResponse<RefreshTokenResponse>.Ok(new RefreshTokenResponse(
                 accessToken,
-                newRefreshToken
-            ));
+                newRefreshToken));
         }
     }
 }

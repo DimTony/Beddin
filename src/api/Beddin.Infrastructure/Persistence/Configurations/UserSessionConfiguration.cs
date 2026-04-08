@@ -1,12 +1,20 @@
-﻿using Beddin.Domain.Aggregates.Users;
+﻿// <copyright file="UserSessionConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Provides the Entity Framework Core configuration for the <see cref="UserSession"/> entity, defining how it maps to the database schema, including property configurations, indexes, and relationships. This configuration ensures that the <see cref="UserSession"/> entity is properly structured in the database to support efficient querying and data integrity for user session management.
+    /// </summary>
     public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
     {
+        /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<UserSession> builder)
         {
             builder.HasKey(x => x.Id);
@@ -67,7 +75,6 @@ namespace Beddin.Infrastructure.Persistence.Configurations
                 .HasFilter("\"InvalidatedAt\" IS NULL");
 
             builder.Ignore(p => p.DomainEvents);
-
         }
     }
 }

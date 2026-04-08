@@ -1,17 +1,20 @@
-﻿using Beddin.Domain.Aggregates.Properties;
+﻿// <copyright file="PropertyImageConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Provides the Entity Framework Core configuration for the <see cref="PropertyImage"/> entity, including property mappings, relationships, indexes, and constraints to ensure proper database schema generation and data integrity.
+    /// </summary>
     public class PropertyImageConfiguration : IEntityTypeConfiguration<PropertyImage>
     {
+        /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<PropertyImage> builder)
         {
             builder.HasKey(i => i.Id);
@@ -43,7 +46,6 @@ namespace Beddin.Infrastructure.Persistence.Configurations
                .HasDatabaseName("uix_property_images_one_cover_per_listing");
 
             builder.Ignore(p => p.DomainEvents);
-
         }
     }
 }
