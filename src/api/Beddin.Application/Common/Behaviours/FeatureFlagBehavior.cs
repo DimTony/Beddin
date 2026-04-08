@@ -1,46 +1,58 @@
-﻿using Beddin.Application.Common.DTOs;
+﻿// <copyright file="FeatureFlagBehavior.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Application.Common.DTOs;
 using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Common;
 using MediatR;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Common.Behaviours
 {
+    /// <summary>
+    /// Pipeline behavior that checks feature flags for requests implementing <see cref="IRequiresFeature"/>.
+    /// If the feature is disabled, returns a failure response according to the response type.
+    /// </summary>
+    /// <typeparam name="TRequest">The type of the request.</typeparam>
+    /// <typeparam name="TResponse">The type of the response.</typeparam>
     public class FeatureFlagBehavior<TRequest, TResponse>
         : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
     {
-        private readonly IConfiguration _config;
+        private readonly IConfiguration config;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FeatureFlagBehavior{TRequest, TResponse}"/> class.
+        /// </summary>
+        /// <param name="config">The configuration instance.</param>
         public FeatureFlagBehavior(IConfiguration config)
         {
-            _config = config;
+            this.config = config;
         }
 
+        /// <inheritdoc/>
         public async Task<TResponse> Handle(
             TRequest request,
             RequestHandlerDelegate<TResponse> next,
             CancellationToken ct)
         {
             if (request is not IRequiresFeature flagged)
+            {
                 return await next();
+            }
 
-            var isEnabled = _config.GetValue<bool?>(flagged.FeatureFlag) ?? true;
+            var isEnabled = this.config.GetValue<bool?>(flagged.FeatureFlag) ?? true;
 
             if (!isEnabled)
             {
                 var resultType = typeof(TResponse);
 
                 if (resultType == typeof(Result))
+                {
                     return (TResponse)(object)Result.Failure(
                         $"This feature is currently disabled: {flagged.FeatureFlag}");
-
-             
+                }
 
                 if (resultType.IsGenericType &&
                     resultType.GetGenericTypeDefinition() == typeof(Result<>))
@@ -50,8 +62,9 @@ namespace Beddin.Application.Common.Behaviours
                         .GetMethod(nameof(Result.Failure), 1, new[] { typeof(string) })!
                         .MakeGenericMethod(innerType);
 
-                    return (TResponse)failureMethod.Invoke(null, new object[] {
-                        $"This feature is currently disabled: {flagged.FeatureFlag}"
+                    return (TResponse)failureMethod.Invoke(null, new object[]
+                    {
+                        $"This feature is currently disabled: {flagged.FeatureFlag}",
                     })!;
                 }
 
@@ -67,11 +80,13 @@ namespace Beddin.Application.Common.Behaviours
                         new[] { typeof(string) });
 
                     if (method == null)
+                    {
                         throw new InvalidOperationException("Fail(string) not found on ApiResponse<T>");
+                    }
 
                     return (TResponse)method.Invoke(null, new object[]
                     {
-                         $"This feature is currently disabled: {flagged.FeatureFlag}"
+                         $"This feature is currently disabled: {flagged.FeatureFlag}",
                     })!;
                 }
 

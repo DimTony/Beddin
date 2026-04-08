@@ -1,22 +1,25 @@
-﻿using Beddin.Application.Features.Users.Commands.Login;
+﻿// <copyright file="ChangePasswordValidator.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Users.Commands.ChangePassword
 {
+    /// <summary>
+    /// Provides validation logic for the <see cref="ChangePasswordCommand"/>.
+    /// </summary>
     public class ChangePasswordValidator : AbstractValidator<ChangePasswordCommand>
-
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChangePasswordValidator"/> class.
+        /// </summary>
         public ChangePasswordValidator()
         {
-            RuleFor(x => x.CurrentPassword)
+            this.RuleFor(x => x.CurrentPassword)
                 .NotEmpty().WithMessage("Current password is required.");
 
-            RuleFor(x => x.NewPassword)
+            this.RuleFor(x => x.NewPassword)
                 .NotEmpty().WithMessage("New password is required.")
                 .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
                 .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
@@ -24,7 +27,7 @@ namespace Beddin.Application.Features.Users.Commands.ChangePassword
                 .Matches("[0-9]").WithMessage("Password must contain at least one number.")
                 .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
 
-            RuleFor(x => x.ConfirmPassword)
+            this.RuleFor(x => x.ConfirmPassword)
                 .NotEmpty().WithMessage("Confirm password is required.")
                 .Equal(x => x.NewPassword).WithMessage("Passwords do not match.")
                 .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
@@ -33,6 +36,5 @@ namespace Beddin.Application.Features.Users.Commands.ChangePassword
                 .Matches("[0-9]").WithMessage("Password must contain at least one number.")
                 .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
         }
-
     }
 }

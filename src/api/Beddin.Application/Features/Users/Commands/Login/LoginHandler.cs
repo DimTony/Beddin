@@ -1,65 +1,98 @@
-﻿using Beddin.Application.Common.DTOs;
+﻿// <copyright file="LoginHandler.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Application.Common.DTOs;
 using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
-using Beddin.Domain.Common;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Beddin.Application.Features.Users.Commands.Login
 {
+    /// <summary>
+    /// Handler for the <see cref="LoginCommand"/>.
+    /// </summary>
     public sealed class LoginHandler : IRequestHandler<LoginCommand, ApiResponse<LoginResponse>>
     {
         private const int MaxFailedAttempts = 3;
         private const int LockoutMinutes = 30;
 
-        private readonly IUserRepository _userRepository;
-        private readonly IUserSessionRepository _sessionRepository;
-        private readonly ITokenService _tokenService;
-        private readonly IEmailService _emailService;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<LoginHandler> _logger;
-        private readonly IConfiguration _configuration;
+        private readonly IUserRepository userRepository;
+        private readonly IUserSessionRepository sessionRepository;
+        private readonly ITokenService tokenService;
+        private readonly IUnitOfWork unitOfWork;
+        private readonly ILogger<LoginHandler> logger;
+        private readonly IConfiguration configuration;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoginHandler"/> class.
+        /// </summary>
+        /// <param name="userRepository">The user repository.</param>
+        /// <param name="sessionRepository">The session repository.</param>
+        /// <param name="tokenService">The token service.</param>
+        /// <param name="emailService">The email service.</param>
+        /// <param name="unitOfWork">The unit of work.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="configuration">The configuration.</param>
         public LoginHandler(
             IUserRepository userRepository,
             IUserSessionRepository sessionRepository,
             ITokenService tokenService,
-            IEmailService emailService,
             IUnitOfWork unitOfWork,
             ILogger<LoginHandler> logger,
             IConfiguration configuration)
         {
-            _userRepository = userRepository;
-            _sessionRepository = sessionRepository;
-            _tokenService = tokenService;
-            _emailService = emailService;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _configuration = configuration;
+            this.userRepository = userRepository;
+            this.sessionRepository = sessionRepository;
+            this.tokenService = tokenService;
+            this.unitOfWork = unitOfWork;
+            this.logger = logger;
+            this.configuration = configuration;
         }
 
+        /// <inheritdoc/>
         public async Task<ApiResponse<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
             // Find identity user
-            var user = await _userRepository.GetByEmail(request.Email, cancellationToken);
+            var user = await this.userRepository.GetByEmail(request.Email, cancellationToken);
             if (user == null)
             {
                 return ApiResponse<LoginResponse>.Fail("Invalid email or password.");
             }
 
-            var activeSessions = await _sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
+            var activeSessions = await this.sessionRepository.GetAllActiveSessions(user.Id, cancellationToken);
             foreach (var activeSession in activeSessions)
             {
-                activeSession.Invalidate(); 
+                activeSession.Invalidate();
             }
 
-            var refreshToken = _tokenService.GenerateRefreshToken();
-            var expirationMinutes = int.TryParse(_configuration["Jwt:RefreshTokenExpiryMinutes"], out var mins) ? mins : 10080;
+            var refreshToken = this.tokenService.GenerateRefreshToken();
+            var expirationMinutes = int.TryParse(this.configuration["Jwt:RefreshTokenExpiryMinutes"], out var mins) ? mins : 10080;
             var refreshTokenExpiry = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
-            var result = user.AttemptLogin(request.Password, refreshToken, refreshTokenExpiry, DateTime.UtcNow);
+            var isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+
+            if (!isValidPassword)
+            {
+                var validationTime = DateTime.UtcNow;
+                user.RecordFailedLoginAttempt(validationTime);
+
+                if (user.LockedOutUntil.HasValue && user.LockedOutUntil > validationTime)
+                {
+                    await this.userRepository.UpdateAsync(user, cancellationToken);
+                    this.logger.LogWarning("User {Email} account locked due to multiple failed login attempts.", request.Email);
+
+                    // await _emailService.SendAccountLockoutEmail(user.Email, LockoutMinutes);
+                    return ApiResponse<LoginResponse>.Fail($"Account locked due to multiple failed login attempts. Try again in {user.LockedOutUntil - validationTime} minutes.");
+                }
+
+                await this.userRepository.UpdateAsync(user, cancellationToken);
+                return ApiResponse<LoginResponse>.Fail("Invalid email or password.");
+            }
+
+            var result = user.AttemptLogin(refreshToken, refreshTokenExpiry, DateTime.UtcNow);
 
             if (!result.IsSuccess)
             {
@@ -71,21 +104,20 @@ namespace Beddin.Application.Features.Users.Commands.Login
                 refreshToken,
                 refreshTokenExpiry,
                 request.IpAddress,
-                request.UserAgent
-            );
+                request.UserAgent);
 
-            await _sessionRepository.Add(session, cancellationToken);
+            await this.sessionRepository.Add(session, cancellationToken);
 
-            var accessToken = _tokenService.GenerateAccessToken(user, session.Id.Value);
-            var expiresAt = _tokenService.GetTokenExpiration(accessToken);
+            var accessToken = this.tokenService.GenerateAccessToken(user, session.Id.Value);
+            var expiresAt = this.tokenService.GetTokenExpiration(accessToken);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await this.unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return ApiResponse<LoginResponse>.Ok(new LoginResponse(
+            return ApiResponse<LoginResponse>.Ok(
+                new LoginResponse(
                 accessToken,
-                refreshToken
-            ), "Login successful!");
+                refreshToken),
+                "Login successful!");
         }
     }
-
 }

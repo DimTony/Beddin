@@ -1,23 +1,26 @@
-﻿using Beddin.Application.Features.Users.Commands.ResetPassword;
+﻿// <copyright file="DeactivateUserValidator.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Admin.Commands.DeactivateUser
 {
+    /// <summary>
+    /// Provides validation rules for the <see cref="DeactivateUserCommand"/>.
+    /// </summary>
     public class DeactivateUserValidator : AbstractValidator<DeactivateUserCommand>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeactivateUserValidator"/> class.
+        /// </summary>
         public DeactivateUserValidator()
         {
-            RuleFor(x => x.Email)
+            this.RuleFor(x => x.Email)
                .NotEmpty().WithMessage("Email is required.")
                .EmailAddress().WithMessage("Valid email is required.")
                .MinimumLength(3).WithMessage("Email must be at least 3 characters.")
                .MaximumLength(100).WithMessage("Email cannot exceed 100 characters.");
         }
     }
-
 }

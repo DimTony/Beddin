@@ -1,39 +1,51 @@
-﻿using Azure.Core;
+﻿// <copyright file="UserRepository.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
 using Beddin.Application.Common.DTOs;
 using Beddin.Application.Common.Interfaces;
 using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Infrastructure.Persistence.Repositories
 {
+    /// <summary>
+    /// Provides data access operations specifically for <see cref="User"/> aggregates.
+    /// Extends the generic <see cref="Repository{TAggregate, TId}"/> to include
+    /// user-specific queries and persistence logic.
+    /// </summary>
     public class UserRepository : Repository<User, UserId>, IUserRepository
     {
-        public UserRepository(AppDbContext context) : base(context) { }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserRepository"/> class.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        public UserRepository(AppDbContext context)
+            : base(context)
+        {
+        }
 
+        /// <inheritdoc/>
         public async Task<User?> GetByEmail(string email, CancellationToken ct = default)
         {
             var normalizedEmail = email.Trim().ToLowerInvariant();
 
-            return  await _dbSet.FirstOrDefaultAsync(
+            return await this.dbSet.FirstOrDefaultAsync(
                 u => u.Email == normalizedEmail, ct);
         }
 
+        /// <inheritdoc/>
         public async Task<User?> GetUserByRefreshToken(string refreshToken, CancellationToken ct = default)
         {
-            return await _dbSet.FirstOrDefaultAsync(
+            return await this.dbSet.FirstOrDefaultAsync(
                 u => u.RefreshToken == refreshToken, ct);
         }
 
+        /// <inheritdoc/>
         public async Task<PagedResult<User>> GetAllUsers(Guid? userId, string? firstName, string? lastName, string? email, Guid? roleId, int pageNumber, int pageSize, CancellationToken ct = default)
         {
-
-            var query = _dbSet.AsQueryable();
+            var query = this.dbSet.AsQueryable();
 
             if (userId.HasValue)
             {
@@ -74,7 +86,5 @@ namespace Beddin.Infrastructure.Persistence.Repositories
             return PagedResult<User>.From(
                 items, totalCount, pageNumber, pageSize);
         }
-
-
     }
 }

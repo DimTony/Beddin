@@ -1,12 +1,20 @@
-﻿using Beddin.Domain.Aggregates.Properties;
+﻿// <copyright file="PropertyConfiguration.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.Domain.Aggregates.Properties;
 using Beddin.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Beddin.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Provides the Entity Framework Core configuration for the <see cref="Property"/> entity, defining how it maps to the database schema, including property configurations, relationships, indexes, and constraints.
+    /// </summary>
     public class PropertyConfiguration : IEntityTypeConfiguration<Property>
     {
+        /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<Property> builder)
         {
             builder.HasKey(p => p.Id);
@@ -49,18 +57,7 @@ namespace Beddin.Infrastructure.Persistence.Configurations
             builder.Property(p => p.Latitude);
             builder.Property(p => p.Longitude);
 
-            //if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
-            //{
-                builder.Ignore(x => x.Location);
-            //}
-            //else
-            //{
-            //    builder.Property(p => p.Location)
-            //    .HasColumnType("geography(Point, 4326)")   // PostGIS type
-            //    .IsRequired(false);
-            //}
-
-            
+            builder.Ignore(x => x.Location);
 
             builder.Property(p => p.Bedrooms).IsRequired();
             builder.Property(p => p.Bathrooms).HasColumnType("decimal(4,1)").IsRequired();
@@ -121,11 +118,6 @@ namespace Beddin.Infrastructure.Persistence.Configurations
             builder.HasIndex(p => p.IsPublished).HasDatabaseName("ix_properties_is_published");
             builder.HasIndex(p => p.City).HasDatabaseName("ix_properties_city");
 
-            // NOTE: Geospatial index (GIST on geometry column) added in v0.2 migration.
-
-            //builder.HasIndex(p => p.Location).HasMethod("GIST").HasDatabaseName("ix_properties_location"); // spatial index
-
-            // Ignore domain events — handled by the dispatcher, not persisted
             builder.Ignore(p => p.DomainEvents);
         }
     }

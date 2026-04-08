@@ -1,22 +1,26 @@
-﻿using Beddin.Application.Features.Users.Commands.Login;
+﻿// <copyright file="ConfirmEmailValidator.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Features.Users.Commands.ConfirmEmail
 {
+    /// <summary>
+    /// Provides validation rules for the <see cref="ConfirmEmailCommand"/>.
+    /// </summary>
     public class ConfirmEmailValidator : AbstractValidator<ConfirmEmailCommand>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfirmEmailValidator"/> class.
+        /// </summary>
         public ConfirmEmailValidator()
         {
-            RuleFor(x => x.Email)
+            this.RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required.")
                 .EmailAddress().WithMessage("Invalid email format.");
 
-            RuleFor(x => x.Token)
+            this.RuleFor(x => x.Token)
                 .NotEmpty().WithMessage("Token is required.");
         }
     }

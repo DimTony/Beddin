@@ -1,32 +1,38 @@
-﻿using Beddin.Application.Common.DTOs;
+﻿// <copyright file="SendConfirmationEmailHandler.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using System.Net;
 using Beddin.Application.Common.Interfaces;
 using Beddin.Application.Common.Options;
-using Beddin.Domain.Aggregates.Users;
 using Beddin.Domain.Events;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Beddin.Application.Notifications.OnUserRegistered
 {
+    /// <summary>
+    /// Handles the <see cref="EmailConfirmationTokenGeneratedEvent"/> by sending a confirmation email to the user.
+    /// </summary>
     public class SendConfirmationEmailHandler
        : INotificationHandler<EmailConfirmationTokenGeneratedEvent>
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IEmailService _emailService;
-        private readonly ILogger<SendConfirmationEmailHandler> _logger;
-        private readonly EmailOptions _options;
-        private readonly IHostEnvironment _environment;
+        private readonly IUserRepository userRepository;
+        private readonly IEmailService emailService;
+        private readonly ILogger<SendConfirmationEmailHandler> logger;
+        private readonly EmailOptions options;
+        private readonly IHostEnvironment environment;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SendConfirmationEmailHandler"/> class.
+        /// </summary>
+        /// <param name="userRepository">The user repository.</param>
+        /// <param name="emailService">The email service.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="options">The email options.</param>
+        /// <param name="environment">The host environment.</param>
         public SendConfirmationEmailHandler(
             IUserRepository userRepository,
             IEmailService emailService,
@@ -34,34 +40,41 @@ namespace Beddin.Application.Notifications.OnUserRegistered
             IOptions<EmailOptions> options,
             IHostEnvironment environment)
         {
-            _userRepository = userRepository;
-            _emailService = emailService;
-            _logger = logger;
-            _options = options.Value;
-            _environment = environment;
+            this.userRepository = userRepository;
+            this.emailService = emailService;
+            this.logger = logger;
+            this.options = options.Value;
+            this.environment = environment;
         }
+
+        /// <summary>
+        /// Handles the event when an email confirmation token is generated for a user.
+        /// Sends a confirmation email to the user.
+        /// </summary>
+        /// <param name="notification">The event notification containing user and token information.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task Handle(EmailConfirmationTokenGeneratedEvent notification, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByIdAsync(notification.UserId, cancellationToken);
+            var user = await this.userRepository.GetByIdAsync(notification.UserId, cancellationToken);
 
             if (user == null)
             {
-                _logger.LogError("User with email {Email} not found for sending confirmation email.", notification.Email);
+                this.logger.LogError("User with email {Email} not found for sending confirmation email.", notification.Email);
                 return;
             }
 
             var encodedToken = WebUtility.UrlEncode(notification.Token);
 
-            var confirmationLink = $"{_options.BaseUrl}/auth/confirm-email?email={notification.Email}&token={encodedToken}";
+            var confirmationLink = $"{this.options.BaseUrl}/auth/confirm-email?email={notification.Email}&token={encodedToken}";
 
-            if (_environment.IsDevelopment())
+            if (this.environment.IsDevelopment())
             {
-                _logger.LogInformation("DEV EMAIL CONFIRMATION LINK: {Link}", confirmationLink);
+                this.logger.LogInformation("DEV EMAIL CONFIRMATION LINK: {Link}", confirmationLink);
 
                 // Optional: also write to console directly
                 Console.WriteLine($"DEV EMAIL CONFIRMATION LINK: {confirmationLink}");
             }
-
 
             var body = $"""
             <p>Hello {notification.FirstName},</p>
@@ -83,7 +96,7 @@ namespace Beddin.Application.Notifications.OnUserRegistered
 
             try
             {
-                await _emailService.SendAsync(
+                await this.emailService.SendAsync(
                     to: notification.Email,
                     subject: "Confirm your email - Beddin",
                     body: body,
@@ -91,7 +104,8 @@ namespace Beddin.Application.Notifications.OnUserRegistered
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
+                this.logger.LogError(
+                    ex,
                     "Failed to send onboarding email to {Email}. User account was created successfully — resend manually if needed.",
                     notification.Email);
             }

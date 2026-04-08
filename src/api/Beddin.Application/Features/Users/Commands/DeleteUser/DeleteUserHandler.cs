@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="DeleteUserHandler.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
 
 namespace Beddin.Application.Features.Users.Commands.DeleteUser
 {

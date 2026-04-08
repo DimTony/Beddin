@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="ConflictException.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
 
 namespace Beddin.Application.Common.Exceptions
 {
@@ -13,6 +11,13 @@ namespace Beddin.Application.Common.Exceptions
     /// </summary>
     public class ConflictException : Exception
     {
-        public ConflictException(string message) : base(message) { }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConflictException"/> class.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        public ConflictException(string message)
+            : base(message)
+        {
+        }
     }
 }

@@ -1,28 +1,34 @@
-﻿using Beddin.API.Middleware;
+﻿// <copyright file="ApplicationExtensions.cs" company="Beddin">
+// Copyright (c) Beddin. All rights reserved.
+// </copyright>
+
+using Beddin.API.Middleware;
 using Beddin.Application.Common.Helpers;
-using Beddin.Domain.Aggregates.Users;
 using Beddin.Infrastructure.Persistence;
 using Beddin.Infrastructure.Persistence.Seed;
 using Hangfire;
 using Hangfire.Dashboard;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Npgsql;
-using StackExchange.Redis;
 
 namespace Beddin.API.Extensions
 {
+    /// <summary>
+    /// Provides extension methods for application configuration and middleware setup.
+    /// </summary>
     public static class ApplicationExtensions
     {
-        
+        /// <summary>
+        /// Applies pending database migrations using the application's service provider.
+        /// </summary>
+        /// <param name="app">The <see cref="IApplicationBuilder"/> instance to use for applying migrations.</param>
+        /// <returns>
+        /// A <see cref="Task{IApplicationBuilder}"/> representing the asynchronous operation, with the original <see cref="IApplicationBuilder"/> instance.
+        /// </returns>
         public static async Task<IApplicationBuilder> ApplyMigrationsAsync(
             this IApplicationBuilder app)
         {
             using var scope = app.ApplicationServices.CreateScope();
             var services = scope.ServiceProvider;
             var logger = services.GetRequiredService<ILogger<MigrationHandler>>();
-
 
             try
             {
@@ -49,6 +55,13 @@ namespace Beddin.API.Extensions
 
             return app;
         }
+
+        /// <summary>
+        /// Seeds the database with required data and optionally with sample data for development.
+        /// </summary>
+        /// <param name="app">The <see cref="IApplicationBuilder"/> instance to use for seeding the database.</param>
+        /// <param name="seedSampleData">A value indicating whether to seed sample data for development purposes.</param>
+        /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
         public static async Task<IApplicationBuilder> SeedDatabaseAsync(
             this IApplicationBuilder app,
             bool seedSampleData = false)
@@ -67,11 +80,12 @@ namespace Beddin.API.Extensions
 
                 await seeder.SeedAsync();
 
-                //if (seedSampleData)
-                //{
-                //    logger.LogInformation("Seeding sample data for development...");
-                //    await seeder.SeedSampleDataAsync();
-                //}
+                if (seedSampleData)
+                {
+                    logger.LogInformation("Seeding sample data for development...");
+
+                    // await seeder.SeedSampleDataAsync();
+                }
 
                 logger.LogInformation("Database seeding completed");
             }
@@ -83,6 +97,12 @@ namespace Beddin.API.Extensions
 
             return app;
         }
+
+        /// <summary>
+        /// Configures and applies API middleware components to the specified <see cref="WebApplication"/> instance.
+        /// </summary>
+        /// <param name="app">The <see cref="WebApplication"/> to configure.</param>
+        /// <returns>The configured <see cref="WebApplication"/> instance.</returns>
         public static WebApplication UseApiMiddleware(this WebApplication app)
         {
             if (app.Environment.IsDevelopment())
@@ -96,20 +116,20 @@ namespace Beddin.API.Extensions
             }
 
             app.UseCors(app.Environment.IsDevelopment() ? "Development" : "Production");
-
-            
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             if (!app.Environment.IsDevelopment())
+            {
                 app.UseHttpsRedirection();
+            }
 
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions 
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
             {
                 Authorization = app.Environment.IsDevelopment()
-                ? new[] { new LocalRequestsOnlyAuthorizationFilter() } 
-                : new IDashboardAuthorizationFilter[] { new HangfireAuthorizationFilter() }
+                ? new[] { new LocalRequestsOnlyAuthorizationFilter() }
+                : new IDashboardAuthorizationFilter[] { new HangfireAuthorizationFilter() },
             });
             app.UseMiddleware<SessionValidationMiddleware>();
             app.UseMiddleware<PasswordPolicyMiddleware>();
@@ -120,6 +140,5 @@ namespace Beddin.API.Extensions
 
             return app;
         }
-
     }
 }
